@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defesa técnica - Cliente A - Praças</title>
+<link rel="stylesheet" href="tema.css">
+<style>
+/* Só desta tela. Dados públicos do IBGE, anonimizados. O tempo de chegada vem de motor.js. */
+.col-pilha{align-self:stretch}
+.pilha-mapa{grid-template-rows:1fr auto}
+.pilha-rank{grid-template-rows:auto 1fr}
+.painel.cresce{min-height:0}
+/* Mapa em radar */
+.mapa-caixa{flex:1;display:grid;align-items:center;justify-items:center;min-height:0}
+.mapa-caixa svg{width:100%}
+.anel{fill:none;stroke:rgba(76,194,241,.26);stroke-width:1}
+.anel.fraco{stroke:rgba(76,194,241,.14)}
+.eixo{stroke:rgba(76,194,241,.1);stroke-width:1}
+.anelrot{font-size:11px;fill:rgba(76,194,241,.7);letter-spacing:.04em}
+.lig{stroke:rgba(76,194,241,.28);stroke-width:1;stroke-dasharray:2 4}
+.lig.sel{stroke:var(--x);stroke-dasharray:none;stroke-width:1.4;opacity:.85}
+.pr{cursor:pointer}
+.pr .halo{fill:rgba(76,194,241,.1)}
+.pr circle.c{fill:rgba(76,194,241,.3);stroke:var(--y);stroke-width:1.6;transition:fill .2s,stroke .2s}
+.pr.cap circle.c{fill:url(#gNucleo);stroke:var(--x);stroke-width:1.5}
+.pr .selanel{fill:none;stroke:var(--x);stroke-width:1.6;opacity:0;transition:opacity .2s}
+.pr.sel .selanel{opacity:1}
+.pr.sel circle.c{fill:rgba(242,169,59,.35);stroke:var(--x)}
+.pr.cap.sel circle.c{fill:url(#gNucleo)}
+.pr circle.hit{fill:transparent}
+.pr text{font-size:12px;fill:var(--texto);pointer-events:none;paint-order:stroke;stroke:rgba(9,11,13,.85);stroke-width:3px;stroke-linejoin:round}
+.pr.sel text{fill:var(--x);font-weight:600}
+.pr:hover circle.c{stroke:#fff}
+.pr:focus-visible{outline:none}
+.pr:focus-visible circle.hit{stroke:var(--y);stroke-width:2}
+/* Detalhe da praça */
+.ficha h3{margin:0 0 10px;font-size:18px}
+.ficha dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 20px;margin:0;font-size:14px}
+.ficha dt,.ficha dd{padding:8px 0;border-top:1px solid var(--linha)}
+.ficha dt:first-of-type,.ficha dt:first-of-type+dd{border-top:0;padding-top:0}
+.ficha dt{color:var(--apoio)}
+.ficha dd{margin:0;text-align:right;font-weight:600}
+.ficha dd.sig{color:var(--fraco);font-weight:400}
+.ficha dt:nth-last-of-type(1),.ficha dt:nth-last-of-type(1)+dd{border-top-color:var(--x);color:var(--texto);font-weight:600}
+.ficha dt:nth-last-of-type(1)+dd{color:var(--x);font-size:20px;letter-spacing:-.01em}
+/* Índice e ranking */
+.formula{margin:0 0 16px;font-size:15px;line-height:1.5}
+.formula b{color:var(--x);font-weight:600}
+.rank{flex:1;display:grid;grid-auto-rows:1fr;align-content:stretch;margin-top:2px}
+.rk{display:grid;grid-template-columns:24px minmax(0,1fr) 66px;gap:12px;align-items:center;width:100%;text-align:left;padding:8px 10px;border-top:1px solid var(--linha);border-radius:0;transition:background .2s}
+.rk:first-child{border-top:0}
+.rk:hover{background:rgba(154,166,174,.07)}
+.rk[aria-pressed=true]{background:rgba(242,169,59,.09);box-shadow:inset 2px 0 0 var(--x)}
+.rk .pos{color:var(--fraco);font-size:13px}
+.rk .tr{display:grid;gap:6px}
+.rk .tr span{font-size:13px;color:var(--apoio)}
+.rk[aria-pressed=true] .tr span{color:var(--texto)}
+.rk .tr i{display:block;height:9px;border-radius:5px;background:linear-gradient(90deg,#2A7898,var(--y));box-shadow:0 0 12px var(--brilho-y);transition:width .4s cubic-bezier(.16,1,.3,1)}
+.rk.cap .tr i{background:linear-gradient(90deg,#B97A1C,var(--x));box-shadow:0 0 14px var(--brilho-x)}
+.rk output{text-align:right;font-weight:600;font-size:16px}
+.rk.cap output{color:var(--x)}
+/* Curva */
+.curva-caixa{margin-top:4px}
+.curva-caixa svg{width:100%}
+.res{margin:0;font-size:15px;line-height:1.5}
+.posbar{display:grid;gap:14px;margin-top:20px;padding-top:18px;border-top:1px solid var(--linha)}.pb{display:grid;grid-template-columns:96px 1fr 52px;gap:12px;align-items:center;font-size:13px;color:var(--apoio)}.pb .tr{position:relative;height:10px;border-radius:5px;background:rgba(154,166,174,.12)}.pb .tr span{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#2A7898,var(--y))}.pb .tr em{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--achado)}.pb output{text-align:right;color:var(--texto);font-weight:600}.pb.ok .tr span{background:linear-gradient(90deg,#B97A1C,var(--x));box-shadow:0 0 12px var(--brilho-x)}
+.tres-rot{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--fraco);margin-bottom:8px}
+@media (max-width:1100px){.pilha-mapa,.pilha-rank{grid-template-rows:auto}}
+</style>
+</head>
+<body>
+<header class="topo">
+  <a class="marca" href="index.html">Defesa técnica · Cliente A</a>
+  <nav class="menu"><a href="proposta.html">A proposta em uma tela</a><a href="index.html#parque">O parque</a><a href="equipe.html">A equipe</a><a class="ativo" href="pracas.html" aria-current="page">Praças</a><a href="contrato.html">O contrato</a><a href="mobilizacao.html">Mobilização</a></nav>
+  <span class="selo">Edital público · dados anonimizados</span>
+</header>
+<main class="pagina">
+
+  <section class="bloco" id="b1">
+    <div class="abre com-fatos">
+      <p class="sobre">1 · Oferta de mão de obra por praça</p>
+      <div><div class="num-grande" id="k1"></div><div class="num-rot">do pessoal ocupado nas três atividades (CNAE 43.2, 33.1 e 71.1) está na Capital A</div></div>
+      <p class="conclusao" id="f1"></p><div class="fatos" id="fa1"></div>
+    </div>
+    <div class="col-6 col-pilha pilha-mapa">
+      <div class="painel cresce">
+        <h3>Mapa esquemático das praças</h3>
+        <p class="rot">Área do círculo proporcional ao pessoal ocupado nas três atividades. Distância rodoviária estimada (premissa: linha reta entre sedes × 1,3); direção aproximada. A praça selecionada aparece na ficha.</p>
+        <div class="mapa-caixa" id="mapaCaixa"><svg id="mapa" role="group" aria-label="Mapa esquemático das praças ao redor da Capital A"></svg></div>
+      </div>
+      <div class="painel ficha" id="ficha" aria-live="polite"></div>
+    </div>
+    <div class="col-6 col-pilha pilha-rank">
+      <div class="painel">
+        <h3>Índice de conveniência</h3>
+        <p class="formula"><b>Índice</b> = pessoal ocupado ÷ (1 + km ÷ <span id="fdiv"></span>). Premissa da proposta.</p>
+        <div class="ctl"><label for="s-div">Distância em que o índice cai à metade <b id="v-div"></b></label><input type="range" id="s-div" min="15" max="60" step="1" value="30"></div>
+      </div>
+      <div class="painel cresce">
+        <h3>Praças por índice de conveniência</h3>
+        <p class="rot">Barras em escala linear; o maior índice ocupa a largura toda.</p>
+        <div class="rank" id="rank"></div>
+      </div>
+    </div>
+    <details class="fonte">
+      <summary>Fontes e premissas</summary>
+      <p id="dv1a"></p>
+      <p id="dv1b"></p>
+      <p id="dv1c"></p>
+    </details>
+  </section>
+
+  <section class="bloco" id="b2">
+    <div class="abre com-fatos">
+      <p class="sobre">2 · Distância máxima da base do sobreaviso</p>
+      <div><div class="num-grande" id="k2"></div><div class="num-rot">distância máxima da base que cumpre o alvo de 95%</div></div>
+      <p class="conclusao" id="f2"></p><div class="fatos" id="fa2"></div>
+    </div>
+    <div class="painel col-8">
+      <h3>Chamados no prazo por distância da base</h3>
+      <p class="rot">Percentual de chamados com técnico no local em até 60 min, por distância da base até a unidade.</p>
+      <div class="curva-caixa" id="curvaCaixa"><svg id="curva" role="img" aria-label="Percentual de chamados com o técnico no local em até 60 minutos, conforme a distância da base até a unidade"></svg></div>
+      <div class="leg"><span><i style="border-color:#4CC2F1"></i>Chamados no prazo</span><span><i style="border-color:#FF6F59;border-top-style:dashed"></i>Alvo de 95%</span><span><i style="border-color:#F2A93B"></i>Distância máxima no alvo</span></div>
+    </div>
+    <div class="col-4 col-pilha" style="grid-template-rows:auto 1fr">
+      <div class="painel">
+        <h3>Premissas do deslocamento</h3>
+        <div class="ctl" style="margin-top:14px">
+          <div><label for="s-vel">Velocidade urbana provável <b id="v-vel"></b></label><input type="range" id="s-vel" min="20" max="45" step="1" value="30"></div>
+          <div><label for="s-aci">Tempo provável de acionamento <b id="v-aci"></b></label><input type="range" id="s-aci" min="5" max="25" step="1" value="10"></div>
+        </div>
+      </div>
+      <div class="painel cresce"><div class="tres-rot">Resultado</div><p class="res" id="res2"></p><div class="posbar" id="vizin"></div></div>
+    </div>
+    <details class="fonte">
+      <summary>Fontes e premissas</summary>
+      <p>Prazo de 1 hora para severidade urgente: dado do edital (termo de referência). Alvo de 95% dos chamados no prazo: premissa deste cálculo, marcada pela linha tracejada.</p>
+      <p id="dv2a"></p>
+      <p id="dv2b"></p>
+      <p>Simulação de Monte Carlo com 3 mil chamados por distância. Cada chamado soma tempo de acionamento e tempo de trajeto, ambos com distribuição triangular, a mesma do bloco do prazo na proposta.</p>
+      <p>Distância rodoviária da base à unidade (premissa: linha reta entre sedes × 1,3). Para os municípios vizinhos, adota-se a distância até o centro da Capital A.</p>
+    </details>
+  </section>
+</main>
+
+<script type="module">
+import { PADRAO, chegada } from './motor.js';
+import { PRACAS, FONTE } from './pracas_dados.js';
+const $ = s => document.querySelector(s);
+const n = (v, d = 0) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const NS = 'http://www.w3.org/2000/svg';
+const COR = { x: '#F2A93B', y: '#4CC2F1', a: '#FF6F59' };
+const ATIV = [['instalacoes', 'Instalações elétricas e hidráulicas (43.2)'], ['manutencao', 'Manutenção de máquinas e equipamentos (33.1)'], ['engenharia', 'Engenharia e atividades técnicas (71.1)']];
+const soma = p => ATIV.reduce((s, [k]) => s + (p.ocupados[k] ?? 0), 0);
+const cap = PRACAS[0];
+let D = 30, sel = cap.id;
+const pinta = e => e.style.setProperty('--p', ((e.value - e.min) / (e.max - e.min) * 100) + '%');
+const largura = el => Math.max(280, Math.floor(el.getBoundingClientRect().width) || 280);
+// Entrada animada uma vez: só o primeiro desenho anima; redesenho é imediato.
+const feitos = new Set();
+const quieto = id => { const r = feitos.has(id); feitos.add(id); return r; };
+
+// Mapa em radar: bloco construído conforme a largura; a seleção só troca a classe.
+const raio = (p, k) => Math.max(5.5, 0.22 * Math.sqrt(soma(p)) * k); // área proporcional ao pessoal ocupado, com raio mínimo legível
+function montaMapa() {
+  const W = largura($('#mapaCaixa')), ESC = Math.min(3.8, (W / 2 - 30) / 80), k = Math.min(1, ESC / 3);
+  const rMax = 80 * ESC, H = Math.round(2 * rMax + 52), CX = W / 2, CY = H / 2;
+  const q = quieto('mapa') ? '' : 'anim-surge';
+  const it = PRACAS.map(p => {
+    const a = (p.direcao ?? 0) * Math.PI / 180;
+    return { p, x: CX + p.km * ESC * Math.sin(a), y: CY - p.km * ESC * Math.cos(a), r: raio(p, k), rot: (p === cap ? 'Capital A' : 'M' + p.id.split('-')[1]) + ' · ' + n(soma(p)) };
+  });
+  // Rótulos sem colisão: para cada ponto escolhe, entre oito posições, a de menor sobreposição com círculos e rótulos já postos.
+  const obst = it.map(i => ({ x0: i.x - i.r - 3, x1: i.x + i.r + 3, y0: i.y - i.r - 3, y1: i.y + i.r + 3 }));
+  const aneis = []; for (let r = 20; r <= 80; r += 20) aneis.push(r);
+  aneis.forEach(r => obst.push({ x0: CX + 3, x1: CX + 41, y0: CY - r * ESC - 14, y1: CY - r * ESC }));
+  const sob = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+  const colocados = [];
+  [...it].sort((a, b) => (a.p === cap ? -1 : 0) - (b.p === cap ? -1 : 0) || a.y - b.y).forEach(i => {
+    const w = i.rot.length * 6.6, g = 7, r = i.r, d = r * .72 + 4;
+    const cand = i.p === cap ? [[0, r + g + 11, 'middle'], [0, -(r + g), 'middle'], [r + g, 4, 'start'], [-(r + g), 4, 'end'], [d, d + 9, 'start'], [-d, d + 9, 'end'], [d, -d + 2, 'start'], [-d, -d + 2, 'end']] : [[r + g, 4, 'start'], [-(r + g), 4, 'end'], [0, -(r + g), 'middle'], [0, r + g + 11, 'middle'], [d, -d + 2, 'start'], [-d, -d + 2, 'end'], [d, d + 9, 'start'], [-d, d + 9, 'end']];
+    let melhor = null;
+    cand.forEach(([dx, dy, an], ci) => {
+      const x = i.x + dx, y = i.y + dy, x0 = an === 'start' ? x : an === 'end' ? x - w : x - w / 2;
+      const box = { x0, x1: x0 + w, y0: y - 10, y1: y + 4 };
+      let c = ci * 2;
+      obst.forEach((o, oi) => { if (oi !== it.indexOf(i)) c += sob(box, o); });
+      colocados.forEach(o => { c += sob(box, o) * 2; });
+      c += Math.max(0, 6 - box.x0) * 200 + Math.max(0, box.x1 - (W - 6)) * 200 + Math.max(0, 4 - box.y0) * 200 + Math.max(0, box.y1 - (H - 2)) * 200;
+      if (!melhor || c < melhor.c) melhor = { c, x, y, an, box };
+    });
+    colocados.push(melhor.box); i.lab = melhor;
+  });
+  let h = `<defs><radialGradient id="gNucleo"><stop offset="0" stop-color="#FFF1D2"/><stop offset=".35" stop-color="${COR.x}"/><stop offset="1" stop-color="#B97A1C"/></radialGradient>
+    <radialGradient id="gHalo"><stop offset="0" stop-color="${COR.x}" stop-opacity=".5"/><stop offset="1" stop-color="${COR.x}" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gRadar" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="${COR.y}" stop-opacity=".12"/><stop offset=".7" stop-color="${COR.y}" stop-opacity=".04"/><stop offset="1" stop-color="${COR.y}" stop-opacity="0"/></radialGradient></defs>`;
+  h += `<g class="${q}" pointer-events="none"><circle cx="${CX}" cy="${CY}" r="${rMax + 10}" fill="url(#gRadar)"/>`;
+  for (let a = 0; a < 180; a += 45) { const t = a * Math.PI / 180, R = rMax + 10; h += `<line class="eixo" x1="${(CX - R * Math.sin(t)).toFixed(1)}" y1="${(CY + R * Math.cos(t)).toFixed(1)}" x2="${(CX + R * Math.sin(t)).toFixed(1)}" y2="${(CY - R * Math.cos(t)).toFixed(1)}"/>`; }
+  aneis.forEach((r, i) => { h += `<circle class="anel${i < 3 ? '' : ' fraco'}" cx="${CX}" cy="${CY}" r="${r * ESC}" ${i === 3 ? 'stroke-dasharray="3 5"' : ''}/><text class="anelrot" x="${CX + 5}" y="${(CY - r * ESC - 4).toFixed(1)}">${r} km</text>`; });
+  h += '</g>';
+  h += `<g class="${q}">` + it.filter(i => i.p !== cap).map(i => `<line class="lig" data-id="${i.p.id}" x1="${CX}" y1="${CY}" x2="${i.x.toFixed(1)}" y2="${i.y.toFixed(1)}"/>`).join('') + '</g>';
+  h += it.map(({ p, x, y, r, lab, rot }, idx) => `<g class="pr ${q}${p === cap ? ' cap' : ''}" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.nome}, ${n(p.km, 1)} km" style="animation-delay:${.4 + idx * .06}s"><circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(r, 13) + 3}"/>${p === cap ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * 2.1).toFixed(1)}" fill="url(#gHalo)"/>` : `<circle class="halo" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r + 6}"/>`}<circle class="c${p === cap ? ' glow-x' : ' glow-y'}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}"/><circle class="selanel" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r + 7}"/><text x="${lab.x.toFixed(1)}" y="${lab.y.toFixed(1)}" text-anchor="${lab.an}">${rot}</text></g>`).join('');
+  const s = $('#mapa'); s.setAttribute('viewBox', `0 0 ${W} ${H}`); s.setAttribute('width', W); s.setAttribute('height', H); s.innerHTML = h;
+  marcaSelecao();
+}
+function marcaSelecao() {
+  document.querySelectorAll('#mapa [data-id]').forEach(g => g.classList.toggle('sel', g.dataset.id === sel));
+  document.querySelectorAll('.rk').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === sel));
+  const p = PRACAS.find(x => x.id === sel);
+  const linha = ([k, rot]) => p.ocupados[k] == null ? `<dt>${rot}</dt><dd class="sig">não divulgado (sigilo estatístico)</dd>` : `<dt>${rot}</dt><dd>${n(p.ocupados[k])}</dd>`;
+  $('#ficha').innerHTML = `<h3>${p.nome}</h3><dl><dt>Distância até o centro da Capital A</dt><dd>${p === cap ? 'praça central' : n(p.km, 1) + ' km'}</dd>${ATIV.map(linha).join('')}<dt>Total nas três atividades</dt><dd>${n(soma(p))}</dd></dl>`;
+}
+const indice = p => soma(p) / (1 + p.km / D);
+function desenhaRanking() {
+  const ord = [...PRACAS].sort((a, b) => indice(b) - indice(a));
+  const top = ord[0], viz = ord.find(p => p !== cap);
+  const total = PRACAS.reduce((s, p) => s + soma(p), 0);
+  $('#k1').innerHTML = `${n(soma(cap) / total * 100)}<span class="un">%</span>`;
+  $('#f1').innerHTML = `${top.nome} concentra <b>${n(soma(cap) / total * 100)}% do pessoal ocupado</b> das ${n(PRACAS.length)} praças nas três atividades e tem o maior índice de conveniência. Entre os municípios vizinhos, o maior índice é de ${viz.nome}, a ${n(viz.km, 1)} km.`;
+  $('#fa1').innerHTML = `<div><span>Praças comparadas</span><b>${n(PRACAS.length)}</b></div><div><span>Pessoal ocupado na Capital A</span><b class="x">${n(soma(cap))}</b></div><div><span>Vizinho de maior índice, a ${n(viz.km, 1)} km</span><b class="y">${viz.nome.replace('Município ', 'M')}</b></div>`;
+  $('#fdiv').textContent = n(D) + ' km'; $('#v-div').textContent = n(D) + ' km';
+  const mx = indice(ord[0]);
+  $('#rank').innerHTML = ord.map((p, i) => `<button class="rk${p === cap ? ' cap' : ''}" data-id="${p.id}" aria-pressed="${p.id === sel}"><span class="pos">${i + 1}</span><span class="tr"><span>${p.nome} · ${p === cap ? 'centro' : n(p.km, 1) + ' km'}</span><i style="width:max(2px,${indice(p) / mx * 100}%)"></i></span><output>${n(indice(p), indice(p) < 100 ? 1 : 0)}</output></button>`).join('');
+}
+
+// Bloco 2: faixa de trajeto por praça e chegada simulada pelo motor.
+const ALVO = 0.95, VMAX = 45, VMIN = 18;
+let VEL = 30, ACI = 10, ult = null;
+const noPrazo = (km, nn) => chegada({ ...PADRAO, acionamento: [ACI * 0.5, ACI, ACI * 2], deslocamento: [km / VMAX * 60, km / VEL * 60, km / VMIN * 60] }, nn).noPrazo;
+function desenhaBase() {
+  $('#v-vel').textContent = n(VEL) + ' km/h'; $('#v-aci').textContent = n(ACI) + ' min';
+  $('#dv2a').textContent = `Velocidade urbana (premissa): ${n(VMAX)} km/h no melhor caso, ${n(VEL)} km/h provável e ${n(VMIN)} km/h no pior. Tempo de trajeto = distância ÷ velocidade.`;
+  $('#dv2b').textContent = `Tempo de acionamento (premissa): ${n(ACI * 0.5, ACI % 2 ? 1 : 0)} min no melhor caso, ${n(ACI)} min provável e ${n(ACI * 2)} min no pior, do chamado até a saída do técnico.`;
+  const pts = []; for (let km = 2; km <= 40; km += 2) pts.push({ km, v: noPrazo(km, 3000) });
+  let X;
+  if (pts[0].v < ALVO) X = 0;
+  else { X = 40; for (let i = 1; i < pts.length; i++) if (pts[i].v < ALVO) { const a = pts[i - 1], b = pts[i]; X = a.km + (a.v - ALVO) / (a.v - b.v) * (b.km - a.km); break; } }
+  const viz = PRACAS.filter(p => p !== cap).map(p => ({ p, v: noPrazo(p.km, 3000) }));
+  const melhor = viz.reduce((m, x) => x.v > m.v ? x : m, viz[0]);
+  const cumprem = viz.filter(x => x.v >= ALVO);
+  $('#f2').innerHTML = X === 0 ? `Com estas premissas, nenhuma distância da faixa calculada (a partir de 2 km) atinge ${n(ALVO * 100)}% dos chamados no prazo.`
+    : X >= 40 ? `Em toda a faixa calculada, até <b>40 km</b> da unidade, ${n(ALVO * 100)}% ou mais dos chamados chegam no prazo.`
+    : `Até <b>${n(X, 1)} km</b> da unidade, ${n(ALVO * 100)}% ou mais dos chamados chegam no prazo.`;
+  $('#res2').textContent = cumprem.length ? `Municípios vizinhos que cumprem o alvo: ${n(cumprem.length)} de ${n(viz.length)}. Maior percentual: ${n(melhor.v * 100)}% dos chamados em até 60 min, a ${n(melhor.p.km, 1)} km.`
+    : `Nenhum município vizinho cumpre o alvo. Maior percentual: ${n(melhor.v * 100)}% dos chamados em até 60 min, no ${melhor.p.nome}, a ${n(melhor.p.km, 1)} km.`;
+  $('#vizin').innerHTML = viz.map(({ p, v }) => `<div class="pb${v >= ALVO ? ' ok' : ''}"><span>${p.nome.replace('Município ', 'M')} · ${n(p.km)} km</span><span class="tr"><span style="width:${v * 100}%"></span><em style="left:${ALVO * 100}%"></em></span><output>${n(v * 100)}%</output></div>`).join('');
+  $('#k2').innerHTML = X === 0 ? `0<span class="un">km</span>` : X >= 40 ? `40+<span class="un">km</span>` : `${n(X, 1)}<span class="un">km</span>`;
+  $('#fa2').innerHTML = `<div><span>Alvo de chamados no prazo</span><b>${n(ALVO * 100)}%</b></div><div><span>Vizinhos que cumprem</span><b class="x">${n(cumprem.length)} de ${n(viz.length)}</b></div><div><span>Maior percentual, a ${n(melhor.p.km, 1)} km</span><b class="y">${n(melhor.v * 100)}%</b></div>`;
+  ult = { pts, X };
+  desenhaCurva(pts, X);
+}
+function desenhaCurva(pts, X) {
+  const el = $('#curva'), W = largura($('#curvaCaixa')), mob = W < 520, H = mob ? 320 : 430;
+  const L = 52, R = 18, T = 26, B = 52, pw = W - L - R, ph = H - T - B;
+  const gx = km => L + (km - 2) / 38 * pw, gy = v => T + (1 - v) * ph;
+  const q = quieto('curva');
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${gx(p.km).toFixed(1)} ${gy(p.v).toFixed(1)}`).join('');
+  let h = `<defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COR.y}" stop-opacity=".34"/><stop offset="1" stop-color="${COR.y}" stop-opacity="0"/></linearGradient></defs>`;
+  for (const v of [0, 0.25, 0.5, 0.75, 1]) h += `<line class="grade" x1="${L}" x2="${W - R}" y1="${gy(v)}" y2="${gy(v)}"/><text x="${L - 8}" y="${gy(v) + 4}" text-anchor="end">${n(v * 100)}%</text>`;
+  for (const km of [2, 10, 20, 30, 40]) h += `<line class="grade" x1="${gx(km)}" x2="${gx(km)}" y1="${T + ph}" y2="${T + ph + 5}"/><text x="${gx(km)}" y="${T + ph + 20}" text-anchor="middle">${n(km)}</text>`;
+  h += `<text x="${L + pw / 2}" y="${H - 6}" text-anchor="middle">Distância da base até a unidade (km)</text>`;
+  h += `<text transform="translate(13 ${T + ph / 2}) rotate(-90)" text-anchor="middle">${mob ? 'Chamados em até 60 min' : 'Chamados com técnico no local em até 60 min'}</text>`;
+  const zx = X > 0 ? gx(X) : L;
+  h += `<rect class="anim-surge" x="${zx.toFixed(1)}" y="${T}" width="${(W - R - zx).toFixed(1)}" height="${ph}" fill="${COR.a}" fill-opacity=".07"/><line class="anim-surge" x1="${zx.toFixed(1)}" x2="${zx.toFixed(1)}" y1="${T}" y2="${T + ph}" stroke="${COR.a}" stroke-opacity=".35"/>`;
+  h += `<path class="anim-area" d="${d}L${gx(40)} ${T + ph}L${gx(2)} ${T + ph}Z" fill="url(#gArea)"/>`;
+  h += `<line x1="${L}" x2="${W - R}" y1="${gy(ALVO)}" y2="${gy(ALVO)}" stroke="${COR.a}" stroke-width="1.5" stroke-dasharray="6 5" class="glow-a"/><text x="${W - R - 4}" y="${gy(ALVO) - 7}" text-anchor="end" style="fill:${COR.a}">Alvo de ${n(ALVO * 100)}%</text>`;
+  h += `<path class="anim-traco glow-y" pathLength="1" d="${d}" fill="none" stroke="${COR.y}" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if (X > 0) {
+    const anc = X > 30 ? 'end' : 'start', dx = X > 30 ? -10 : 10;
+    h += `<line class="anim-surge" x1="${gx(X)}" x2="${gx(X)}" y1="${gy(ALVO)}" y2="${T + ph}" stroke="${COR.x}" stroke-opacity=".8" stroke-dasharray="2 4"/>`;
+    h += `<circle class="anim-surge" cx="${gx(X)}" cy="${gy(ALVO)}" r="11" fill="${COR.x}" opacity=".2"/><circle class="anim-surge glow-x" cx="${gx(X)}" cy="${gy(ALVO)}" r="5.5" fill="#0E1215" stroke="${COR.x}" stroke-width="2.8"/>`;
+    h += `<text class="anim-surge rotulo-forte" x="${gx(X) + dx}" y="${T + ph - 12}" text-anchor="${anc}" style="fill:${COR.x};font-size:15px">${n(X, 1)} km</text>`;
+  }
+  el.setAttribute('class', q ? 'quieto' : ''); el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.setAttribute('width', W); el.setAttribute('height', H); el.innerHTML = h;
+}
+
+// Rodapé "Fontes e premissas" do bloco 1, lido do arquivo de dados.
+$('#dv1a').textContent = `Pessoal ocupado em 31/12 de ${FONTE.ano}: IBGE, Cadastro Central de Empresas, tabela 9418, grupos 43.2, 33.1 e 71.1 da CNAE 2.0, por município. Valores omitidos pelo IBGE por sigilo estatístico constam como não divulgados e entram como zero na soma.`;
+$('#dv1b').remove();
+$('#dv1c').textContent = `Premissa de distância. ${FONTE.regraDistancia} Municípios numerados em ordem crescente de distância. O índice de conveniência é premissa da proposta, sem fonte externa.`;
+
+desenhaRanking(); montaMapa(); marcaSelecao();
+document.querySelectorAll('input[type=range]').forEach(pinta);
+requestAnimationFrame(() => setTimeout(desenhaBase, 0));
+let lw = 0; addEventListener('resize', () => { const w = $('#curvaCaixa').clientWidth; if (w !== lw) { lw = w; montaMapa(); if (ult) desenhaCurva(ult.pts, ult.X); } });
+$('#s-vel').addEventListener('input', ev => { pinta(ev.target); $('#v-vel').textContent = n(+ev.target.value) + ' km/h'; });
+$('#s-vel').addEventListener('change', ev => { VEL = +ev.target.value; desenhaBase(); });
+$('#s-aci').addEventListener('input', ev => { pinta(ev.target); $('#v-aci').textContent = n(+ev.target.value) + ' min'; });
+$('#s-aci').addEventListener('change', ev => { ACI = +ev.target.value; desenhaBase(); });
+$('#mapa').addEventListener('click', ev => { const g = ev.target.closest('.pr'); if (g) { sel = g.dataset.id; marcaSelecao(); } });
+$('#mapa').addEventListener('keydown', ev => { const g = ev.target.closest('.pr'); if (g && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); sel = g.dataset.id; marcaSelecao(); } });
+$('#rank').addEventListener('click', ev => { const b = ev.target.closest('.rk'); if (b) { sel = b.dataset.id; marcaSelecao(); } });
+$('#s-div').addEventListener('input', ev => { pinta(ev.target); D = +ev.target.value; desenhaRanking(); marcaSelecao(); });
+
+// Mostra os blocos ao entrar na tela, para a entrada animada rodar uma vez.
+const blocos = document.querySelectorAll('.bloco');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } }), { threshold: .12 });
+  blocos.forEach(b => io.observe(b));
+} else blocos.forEach(b => b.classList.add('vis'));
+</script>
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defesa técnica - Cliente A</title>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/controls/OrbitControls.js":"./vendor/OrbitControls.js","three/addons/":"./vendor/jsm/"}}</script>
+<style>
+/* Defesa técnica de demonstração. Dados de um edital público, com cliente, unidades, endereços e fabricantes anonimizados. */
+:root{--fundo:#090B0D;--painel:rgba(18,22,26,.86);--linha:#2A3136;--texto:#EEF1F3;--apoio:#9AA6AE;--fraco:#5F6B73;--x:#F2A93B;--y:#4CC2F1;--achado:#FF6F59;--ok:#58D39B}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--fundo);color:var(--texto);font-family:"Geist","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#cena{position:fixed;inset:0;display:block}
+.vinheta{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at 55% 50%,transparent 45%,rgba(0,0,0,.6) 100%)}
+.hud{position:fixed;z-index:5;pointer-events:none}
+.hud>*{pointer-events:auto}
+.topo{top:0;left:0;right:0;display:flex;align-items:center;gap:18px;padding:14px 22px;background:linear-gradient(#090B0D,transparent)}
+.marca{font-weight:600}
+.menu{display:flex;gap:4px}
+.menu span{padding:6px 12px;border-radius:999px;color:var(--fraco)}
+.menu span.ativo{background:var(--texto);color:var(--fundo);font-weight:500}
+.selo{margin-left:auto;font-size:12px;color:var(--apoio);border:1px solid var(--linha);padding:4px 10px;border-radius:999px;background:var(--painel)}
+.titulo{top:64px;left:22px;max-width:560px}
+h1{margin:0;font-size:30px;line-height:1.12;letter-spacing:-.02em;font-weight:600;text-shadow:0 2px 24px #000}
+h1 em{font-style:normal;color:var(--achado)}
+.controles{top:64px;right:22px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.grupo{display:flex;border:1px solid var(--linha);border-radius:999px;padding:3px;background:var(--painel);backdrop-filter:blur(8px)}
+.grupo button{padding:7px 13px;border-radius:999px;color:var(--apoio);white-space:nowrap}
+.grupo button[aria-pressed=true]{background:#252B30;color:var(--texto)}
+.grupo button[data-lente=plano][aria-pressed=true]{background:var(--achado);color:#1A0B08;font-weight:500}
+.lado{top:150px;right:22px;width:310px;max-height:calc(100dvh - 260px);overflow:auto;background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:16px;backdrop-filter:blur(8px)}
+.lado h3{margin:0 0 4px;font-size:16px;font-weight:600}
+.lado p{margin:6px 0 0;color:var(--apoio)}
+.lado .rot{margin-top:14px;font-size:12px;color:var(--fraco)}
+.ativ{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px 12px;margin-top:8px}
+.ativ span:nth-child(even){color:var(--apoio);text-align:right}
+.tag{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:999px;background:var(--achado);color:#1A0B08;font-size:12px;font-weight:500}
+.simular{left:22px;bottom:20px;display:flex;flex-direction:column;gap:10px;max-width:620px}
+.estado{background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:12px 14px;backdrop-filter:blur(8px)}
+.estado .u{font-size:12px;color:var(--fraco)}
+.estado b{font-weight:500}
+.estado.alerta{border-color:var(--achado)}
+.estado.alerta b{color:var(--achado)}
+.relogio{font-size:26px;font-weight:600;letter-spacing:-.02em;color:var(--x);margin-left:10px}
+.botoes{display:flex;flex-wrap:wrap;gap:6px}
+.botoes button{padding:8px 13px;border-radius:999px;border:1px solid var(--linha);background:var(--painel);color:var(--texto);backdrop-filter:blur(8px);transition:border-color .2s,transform .1s}
+.botoes button:hover{border-color:var(--texto)}
+.botoes button:active{transform:scale(.97)}
+.botoes button.volta{color:var(--ok);border-color:#2f6b52}
+.etq{position:fixed;z-index:4;transform:translate(-50%,-100%);font-size:11px;color:var(--apoio);white-space:nowrap;pointer-events:none;background:rgba(9,11,13,.74);padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);transition:opacity .2s}
+.etq b{color:var(--texto);font-weight:500}
+.etq.fora{color:var(--achado)}
+
+/* Abertura: a cena em 3D gira ao fundo */
+#capa{position:fixed;inset:0;z-index:20;box-shadow:inset 0 0 220px rgba(0,0,0,.75);background:linear-gradient(90deg,rgba(7,9,10,.96) 0%,rgba(7,9,10,.8) 30%,rgba(7,9,10,0) 62%);display:grid;grid-template-rows:auto 1fr auto;transition:opacity .9s,visibility .9s}
+#capa.sai{opacity:0;visibility:hidden}
+body.abertura .hud,body.abertura #etqs{opacity:0;pointer-events:none}
+.hud{transition:opacity .6s .3s}
+#capa .cab{padding:22px 28px;display:flex;justify-content:space-between;gap:20px;color:var(--apoio);font-size:12px}
+.meio{align-self:center;padding:0 28px;max-width:820px}
+.sobre{margin:0 0 14px;color:var(--x);font-size:13px}
+.tese{margin:0;font-size:clamp(28px,3.5vw,50px);line-height:1.04;letter-spacing:-.035em;font-weight:600}
+.nums{display:flex;flex-wrap:wrap;gap:10px 34px;margin:30px 0 30px}
+.nums div{min-width:96px}
+.nums b{display:block;font-size:30px;font-weight:600;letter-spacing:-.02em}
+.nums span{color:var(--apoio);font-size:12px}
+.entrar{padding:12px 22px;border-radius:999px;background:var(--texto);color:var(--fundo);font-weight:600;transition:transform .12s}
+.entrar:hover{transform:translateY(-1px)}.entrar:active{transform:scale(.97)}
+.caps{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--linha);background:rgba(7,9,10,.78);backdrop-filter:blur(8px)}
+.caps a{padding:16px 20px 22px;border-left:1px solid var(--linha);color:inherit;text-decoration:none;transition:background .2s}
+.caps a:first-child{border-left:0}
+.caps a:hover{background:rgba(255,255,255,.05)}
+.caps small{color:var(--fraco)}
+.caps b{display:block;font-size:16px;font-weight:500;margin:4px 0 2px}
+.caps span{color:var(--apoio);font-size:12px}
+a.marca{color:inherit;text-decoration:none}
+.menu a{padding:6px 12px;border-radius:999px;color:var(--apoio);text-decoration:none;white-space:nowrap}
+.menu a:hover{color:var(--texto)}
+.menu a.ativo{background:var(--texto);color:var(--fundo);font-weight:500}
+.legenda{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--apoio)}
+.legenda i{width:90px;height:6px;border-radius:3px;background:linear-gradient(90deg,#35576B,var(--x))}
+.simular{width:min(420px,calc(100vw - 44px))}
+#calBarras{width:100%;height:auto;margin-top:8px;display:block}
+#calBarras rect{cursor:pointer}
+.mesl{display:flex;align-items:center;gap:12px;margin:6px 0 10px;color:var(--apoio);font-size:12px}
+.mesl span{min-width:86px}
+.mesl input{flex:1;accent-color:var(--x)}
+.estado .grupo{display:inline-flex;font-size:12px}
+.barh{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;gap:6px 10px;align-items:center;margin-top:8px}
+.barh i{display:block;height:6px;border-radius:3px;background:var(--x)}
+.barh span:nth-child(3n){color:var(--apoio);text-align:right}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){#capa{transition:none}}
+@media (max-width:1100px){.caps{grid-template-columns:repeat(3,1fr)}.menu a:not(.ativo){display:none}}
+@media (max-width:900px){.lado{display:none}h1{font-size:20px}.titulo{max-width:calc(100vw - 44px);top:150px}.controles{left:22px;right:22px;align-items:flex-start}.caps{grid-template-columns:repeat(2,1fr)}.caps span{display:none}#capa .cab span:last-child{display:none}#capa{background:linear-gradient(180deg,rgba(7,9,10,.96) 0%,rgba(7,9,10,.9) 55%,rgba(7,9,10,.55) 100%)}.legenda{display:none}}
+</style>
+</head>
+<body class="abertura">
+<canvas id="cena"></canvas>
+<div class="vinheta"></div>
+
+<div id="capa">
+  <div class="cab"><span>Defesa técnica · Cliente A</span><span>Demonstração de método de Mayara Souza sobre edital público, com dados anonimizados</span></div>
+  <div class="meio">
+    <p class="sobre">Preventiva, corretiva e atendimento de emergência · contrato de 60 meses</p>
+    <h2 class="tese">Manutenção de duas salas-cofre.<br>Memorial de dimensionamento.</h2>
+    <div class="nums" id="nums"></div>
+    <button id="entrar" class="entrar">Abrir o parque</button>
+  </div>
+  <nav class="caps">
+    <a href="proposta.html"><small>01</small><b>A proposta em uma tela</b><span>Dados do edital, conta da equipe e quadro proposto</span></a>
+    <a href="#parque" id="capaParque"><small>02</small><b>O parque</b><span>HH de preventiva por subsistema e por mês</span></a>
+    <a href="equipe.html"><small>03</small><b>A equipe</b><span>Premissas, sensibilidade e fila do sobreaviso</span></a>
+    <a href="pracas.html"><small>04</small><b>Praças</b><span>Oferta de mão de obra e distância da base</span></a>
+    <a href="contrato.html"><small>05</small><b>O contrato</b><span>Baterias e gás sob demanda em 60 meses</span></a>
+    <a href="mobilizacao.html"><small>06</small><b>Mobilização</b><span>Marcos do dia −17 ao dia 90</span></a>
+  </nav>
+</div>
+
+<header class="hud topo">
+  <a class="marca" href="index.html">Defesa técnica · Cliente A</a>
+  <nav class="menu"><a href="proposta.html">A proposta em uma tela</a><a class="ativo" href="index.html#parque">O parque</a><a href="equipe.html">A equipe</a><a href="pracas.html">Praças</a><a href="contrato.html">O contrato</a><a href="mobilizacao.html">Mobilização</a></nav>
+  <span class="selo">Edital público · dados anonimizados</span>
+</header>
+<div class="hud titulo"><h1 id="manchete"></h1></div>
+<div class="hud controles">
+  <div class="grupo" role="group" aria-label="Lente">
+    <button data-lente="horas" aria-pressed="true">HH do plano</button>
+    <button data-lente="plano" aria-pressed="false">Itens fora do inventário</button>
+  </div>
+  <div class="grupo" role="group" aria-label="Unidade">
+    <button data-foco="u1" aria-pressed="true">Unidade 1</button>
+    <button data-foco="u2" aria-pressed="false">Unidade 2</button>
+    <button data-foco="duas" aria-pressed="false">As duas</button>
+  </div>
+  <div class="legenda"><span>menos HH</span><i></i><span>mais HH</span></div>
+</div>
+<aside class="hud lado" id="lado"></aside>
+<div class="hud simular">
+  <div class="estado">
+    <div class="u" id="calRot"></div>
+    <div id="calFrase"></div>
+    <svg id="calBarras" viewBox="0 0 360 74" role="img" aria-label="Horas de preventiva por mês"></svg>
+    <label class="mesl"><span id="mesTxt"></span><input id="mes" type="range" min="0" max="12" step="1" value="0" aria-label="Mês do contrato"></label>
+    <div class="grupo" role="group" aria-label="Calendário">
+      <button data-cal="cru" aria-pressed="true">Periodicidades desde a assinatura</button>
+      <button data-cal="niv" aria-pressed="false">Calendário proposto</button>
+    </div>
+  </div>
+</div>
+<div id="etqs"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { UNIDADES, SUBSISTEMAS, ATIVIDADES, PADRAO, horasPreventiva, calendario } from './motor.js';
+
+// ---------- Dados (inventário e matriz de periodicidade do edital, anonimizados) ----------
+const U = {
+  u1:{nome:'Unidade 1 · Sede', end:'Rua de Exemplo, 123', cx:-17, area:39, w:7.2, d:5.4, total:137,
+      ger:[['331 kVA','Fabricante A'],['313 kVA','Fabricante B']], ats:5, ups:['Fabricante D',''], prec:5, fabPrec:'Fabricante E', quadros:15,
+      cilindro:false, painel:true, deteccao:3, noc:true},
+  u2:{nome:'Unidade 2 · Centro de Operações', end:'Avenida de Exemplo, 456', cx:17, area:28, w:6.2, d:4.5, total:112,
+      ger:[['400 kVA','Fabricante A'],['400 kVA','Fabricante A']], ats:0, ups:['Fabricante G','120 kVA'], prec:3, fabPrec:'Fabricante H', quadros:11,
+      cilindro:true, painel:false, deteccao:2, noc:false}
+};
+const FORA = {
+  bateria:['Bancos de baterias','O plano prevê verificação trimestral dos bancos de baterias, e a substituição é item sob demanda. O inventário não informa quantidade, tecnologia nem data da última troca.','energia'],
+  celula:['A célula em si','Porta, blindagens, piso elevado e leito de cabos somam 76 das 172 execuções do ano, 44% do plano. Nenhum desses elementos consta do inventário.','celula'],
+  racks:['Racks e rede','O plano inclui limpeza mensal dos racks e organização do cabeamento a cada dois meses. Nenhum rack, switch ou fibra está no inventário.','apoio'],
+  cilindro:['Cilindro de gás','O plano exige pressão e teste hidrostático dos cilindros nas duas unidades. Nesta unidade o inventário não lista nenhum.','incendio'],
+  painel:['Painel de detecção','O plano prevê verificação do painel de comando da detecção. Nesta unidade o inventário lista os detectores e não lista o painel.','incendio'],
+  sensores:['Sensores de ambiente','O plano prevê verificação trimestral dos sensores de temperatura, umidade, vibração e estado de porta. Nenhum sensor consta do inventário.','apoio']
+};
+let lente = 'horas', foco = 'u1', mes = 0, nivelar = false;
+const KSUB = {rede:'energia',g1:'energia',g2:'energia',transf:'energia',upsx:'energia',upsy:'energia',qd:'energia',prec:'clima',carga:'celula',det:'incendio',gas:'incendio',noc:'apoio'};
+const $ = s => document.querySelector(s);
+const C = {x:0xF2A93B, y:0x4CC2F1, fonte:0x6F7D86, morto:0x232A2F, achado:0xFF6F59, ok:0x58D39B};
+
+// ---------- Cena ----------
+const canvas = $('#cena');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x090B0D);
+scene.fog = new THREE.Fog(0x090B0D, 90, 220);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 400);
+camera.position.set(-17, 40, 60);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI*0.47; controls.minDistance = 6; controls.maxDistance = 120;
+controls.target.set(-17, 0, 1);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .28;
+scene.add(new THREE.HemisphereLight(0xFFFFFF, 0x80888E, .5));
+// luz de teto: uma fonte principal alta e suave, sem cor
+const sol = new THREE.DirectionalLight(0xFFFFFF, 1.35); sol.position.set(-12, 46, 26); sol.target.position.set(0, 0, -1); scene.add(sol.target);
+sol.castShadow = true; sol.shadow.mapSize.set(3072, 3072); sol.shadow.bias = -.0004; sol.shadow.normalBias = .03; sol.shadow.radius = 3;
+Object.assign(sol.shadow.camera, {left:-44, right:44, top:24, bottom:-24, near:1, far:120}); scene.add(sol);
+const luzCapa = new THREE.DirectionalLight(0xFFFFFF, 0); luzCapa.position.set(-30, 14, 24); scene.add(luzCapa); let naAbertura = false;
+const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
+const brilho = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .25, .4, 1.5); composer.addPass(brilho); composer.addPass(new OutputPass());
+
+// ---------- Texturas desenhadas em canvas (sem marca, sem texto de fabricante) ----------
+let _s = 20260301;
+const rnd = () => { _s = (_s + 0x6D2B79F5) | 0; let t = Math.imul(_s ^ (_s >>> 15), 1 | _s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+function tex(w, h, fn){ const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+function par(w, h, fn){
+  const ca = document.createElement('canvas'), cb = document.createElement('canvas');
+  ca.width = cb.width = w; ca.height = cb.height = h;
+  const a = ca.getContext('2d'), b = cb.getContext('2d');
+  b.fillStyle = '#000'; b.fillRect(0, 0, w, h);
+  fn(a, b, w, h);
+  const ta = new THREE.CanvasTexture(ca), tb = new THREE.CanvasTexture(cb);
+  ta.colorSpace = tb.colorSpace = THREE.SRGBColorSpace; ta.anisotropy = tb.anisotropy = 8;
+  return {map:ta, em:tb};
+}
+const luz = (a, b, x, y, w, h, cor) => { a.fillStyle = cor; a.fillRect(x, y, w, h); b.fillStyle = cor; b.fillRect(x, y, w, h); };
+const TX = {};
+TX.rf = [0,1,2].map(() => par(128, 448, (a, b, w, h) => {
+  a.fillStyle = '#383C41'; a.fillRect(0, 0, w, h);
+  a.fillStyle = '#17191C';
+  for(let y = 9; y < h-9; y += 4) for(let x = 9+((y/4)%2 ? 2 : 0); x < w-9; x += 4){ a.beginPath(); a.arc(x, y, 1.3, 0, 6.3); a.fill(); }
+  a.strokeStyle = '#1D1F22'; a.lineWidth = 7; a.strokeRect(3, 3, w-6, h-6);
+  const cores = ['#38E08F','#38E08F','#38E08F','#F2B04A','#5AB8E8'];
+  for(let y = 16; y < h-18; y += 10.5*(1+Math.floor(rnd()*2))){ if(rnd() < .35) continue; const n = 1+Math.floor(rnd()*3); for(let i = 0; i < n; i++) luz(a, b, 16+i*7, y, 3, 3, cores[Math.floor(rnd()*cores.length)]); }
+  a.fillStyle = '#767C81'; a.fillRect(w-17, h*.34, 4, h*.3);
+}));
+TX.rt = par(128, 448, (a, b, w, h) => {
+  a.fillStyle = '#2E3236'; a.fillRect(0, 0, w, h);
+  a.fillStyle = '#16181A'; for(let y = 14; y < h-14; y += 7) for(const x of [14, 30, 46, 74, 90, 106]) a.fillRect(x, y, 10, 3);
+  a.fillStyle = '#050606'; a.fillRect(w/2-1.5, 0, 3, h); a.strokeStyle = '#0B0C0D'; a.lineWidth = 7; a.strokeRect(3, 3, w-6, h-6);
+  a.fillStyle = '#767C81'; a.fillRect(w/2-9, h*.45, 3, 42); a.fillRect(w/2+6, h*.45, 3, 42);
+});
+TX.painel = [0,1,2].map(v => par(128, 384, (a, b, w, h) => {
+  a.fillStyle = '#C9CECB'; a.fillRect(0, 0, w, h);
+  a.strokeStyle = '#98A09C'; a.lineWidth = 3; a.strokeRect(4, 4, w-8, h-8); a.strokeStyle = '#AEB5B1'; a.lineWidth = 1; a.strokeRect(11, 11, w-22, h-22);
+  a.fillStyle = '#2A2E31'; a.fillRect(w-22, h*.52, 7, 44);
+  if(v === 0){
+    a.fillStyle = '#1B2227'; a.fillRect(20, 34, w-40, 160);
+    for(let r = 0; r < 5; r++) for(let c = 0; c < 5; c++){ const x = 26+c*17, y = 42+r*30; a.fillStyle = '#343D44'; a.fillRect(x, y, 13, 22); a.fillStyle = (r*5+c)%7 === 3 ? '#D9482C' : '#DDE1E2'; a.fillRect(x+4, y+5, 5, 7); }
+    luz(a, b, 26, 206, 5, 5, '#38E08F'); luz(a, b, 38, 206, 5, 5, '#F2B04A');
+  } else if(v === 1){
+    for(let i = 0; i < 2; i++){ a.fillStyle = '#12181C'; a.fillRect(24, 36+i*62, w-48, 46); luz(a, b, 30, 44+i*62, w-72, 4, '#5BB8DE'); luz(a, b, 30, 54+i*62, w-92, 4, '#5BB8DE'); a.fillStyle = '#3A4349'; for(let k = 0; k < 4; k++) a.fillRect(30+k*18, 68+i*62, 12, 7); }
+    luz(a, b, 28, 176, 6, 6, '#38E08F'); luz(a, b, 42, 176, 6, 6, '#38E08F'); luz(a, b, 56, 176, 6, 6, '#F2B04A'); luz(a, b, 70, 176, 6, 6, '#E8503A');
+  } else {
+    luz(a, b, 26, 40, 8, 8, '#38E08F'); luz(a, b, 54, 40, 8, 8, '#F2B04A'); luz(a, b, 82, 40, 8, 8, '#E8503A');
+    a.fillStyle = '#1C2024'; for(const x of [38, 80]){ a.beginPath(); a.arc(x, 110, 9, 0, 6.3); a.fill(); a.fillStyle = '#C9CECB'; a.fillRect(x-1, 102, 2, 8); a.fillStyle = '#1C2024'; }
+    a.fillStyle = '#15191C'; a.fillRect(26, 150, w-52, 30);
+  }
+  a.fillStyle = '#E8EAE9'; a.fillRect(24, h*.84, w-48, 18); a.fillStyle = '#8A9197'; a.fillRect(30, h*.84+7, w-60, 3);
+}));
+TX.ups = par(128, 400, (a, b, w, h) => {
+  a.fillStyle = '#4A4F55'; a.fillRect(0, 0, w, h); a.strokeStyle = '#2A2D31'; a.lineWidth = 4; a.strokeRect(3, 3, w-6, h-6);
+  a.fillStyle = '#06080A'; a.fillRect(24, 26, 80, 54);
+  luz(a, b, 30, 34, 44, 3, '#4FA8D0'); luz(a, b, 30, 42, 30, 3, '#4FA8D0'); luz(a, b, 30, 50, 52, 3, '#4FA8D0'); luz(a, b, 30, 62, 20, 8, '#38E08F');
+  luz(a, b, 90, 32, 5, 5, '#38E08F'); luz(a, b, 90, 44, 5, 5, '#38E08F'); luz(a, b, 90, 56, 5, 5, '#F2B04A');
+  a.fillStyle = '#16181A'; for(let y = 240; y < 380; y += 8) a.fillRect(16, y, w-32, 4);
+  a.fillStyle = '#90979C'; a.fillRect(w-18, h*.42, 4, 42);
+});
+TX.trafo = tex(256, 300, (a, w, h) => {
+  a.fillStyle = '#C5CAC7'; a.fillRect(0, 0, w, h); a.strokeStyle = '#98A09C'; a.lineWidth = 4; a.strokeRect(5, 5, w-10, h-10); a.fillRect(0, 0, 0, 0);
+  a.fillStyle = '#7B8387'; for(let x = 22; x < w-22; x += 9) a.fillRect(x, 24, 4, 118);
+  a.fillStyle = '#8E969A'; for(let y = 156; y < h-22; y += 6) for(let x = 22; x < w-22; x += 6) a.fillRect(x, y, 3, 3);
+  a.strokeStyle = '#98A09C'; a.lineWidth = 2; a.strokeRect(22, 24, w-44, 118); a.beginPath(); a.moveTo(w/2, 14); a.lineTo(w/2, h-14); a.stroke();
+  a.fillStyle = '#E3B92B'; a.beginPath(); a.moveTo(w-44, 150); a.lineTo(w-60, 178); a.lineTo(w-28, 178); a.fill(); a.fillStyle = '#222'; a.fillRect(w-45, 160, 2, 10);
+});
+TX.cracF = par(128, 256, (a, b, w, h) => {
+  a.fillStyle = '#EDEFEF'; a.fillRect(0, 0, w, h); a.strokeStyle = '#B7BEC1'; a.lineWidth = 3; a.strokeRect(3, 3, w-6, h-6);
+  a.fillStyle = '#56626A'; a.fillRect(3, h*.26, w-6, 9);
+  a.fillStyle = '#3D4348'; a.fillRect(3, h-20, w-6, 17);
+  a.fillStyle = '#0A1116'; a.fillRect(w*.3, h*.07, w*.4, h*.08); luz(a, b, w*.33, h*.09, w*.22, 3, '#5BC0E8'); luz(a, b, w*.33, h*.115, w*.12, 3, '#5BC0E8'); luz(a, b, w*.64, h*.095, 4, 4, '#38E08F');
+  a.strokeStyle = '#B7BEC1'; a.lineWidth = 1; a.beginPath(); a.moveTo(w/2, 8); a.lineTo(w/2, h*.24); a.moveTo(w/2, h*.3); a.lineTo(w/2, h-24); a.stroke();
+  a.fillStyle = '#7B848A'; a.fillRect(w/2+5, h*.52, 3, 30);
+});
+TX.cracTopo = tex(128, 96, (a, w, h) => { a.fillStyle = '#D9DDDF'; a.fillRect(0, 0, w, h); a.fillStyle = '#8B9398'; for(let x = 8; x < w-8; x += 6) a.fillRect(x, 8, 3, h-16); });
+TX.condLado = tex(128, 128, (a, w, h) => { a.fillStyle = '#B9BEC1'; a.fillRect(0, 0, w, h); a.fillStyle = '#7F888D'; for(let x = 6; x < w-6; x += 5) a.fillRect(x, 8, 2, h-16); a.strokeStyle = '#8F979B'; a.lineWidth = 3; a.strokeRect(2, 2, w-4, h-4); });
+TX.grade = tex(128, 128, (a, w, h) => {
+  a.clearRect(0, 0, w, h); a.strokeStyle = '#272B2E'; a.lineWidth = 2.2;
+  for(const r of [16, 32, 48, 61]){ a.beginPath(); a.arc(64, 64, r, 0, 6.3); a.stroke(); }
+  for(let i = 0; i < 16; i++){ a.beginPath(); a.moveTo(64, 64); a.lineTo(64+Math.cos(i*Math.PI/8)*62, 64+Math.sin(i*Math.PI/8)*62); a.stroke(); }
+});
+TX.pas = tex(128, 128, (a, w, h) => {
+  a.clearRect(0, 0, w, h); a.fillStyle = '#30363A';
+  for(let i = 0; i < 5; i++){ a.save(); a.translate(64, 64); a.rotate(i*6.2832/5); a.beginPath(); a.ellipse(0, -30, 14, 34, 0, 0, 6.3); a.fill(); a.restore(); }
+  a.beginPath(); a.arc(64, 64, 9, 0, 6.3); a.fill();
+});
+TX.gerLado = par(512, 210, (a, b, w, h) => {
+  a.fillStyle = '#E5E4DB'; a.fillRect(0, 0, w, h);
+  a.fillStyle = '#B7B6AB'; a.fillRect(0, 0, w, 3); a.fillRect(169, 0, 3, h); a.fillRect(340, 0, 3, h);
+  a.fillStyle = '#8E8D81'; for(let y = 22; y < h-26; y += 9) a.fillRect(16, y, 140, 3);
+  a.strokeStyle = '#BDBCB1'; a.lineWidth = 2; a.strokeRect(180, 12, 150, h-24); a.strokeRect(350, 12, 150, h-24);
+  a.fillStyle = '#17191B'; a.fillRect(215, 34, 64, 40); luz(a, b, 221, 42, 36, 4, '#5BC0E8'); luz(a, b, 221, 52, 22, 4, '#5BC0E8'); luz(a, b, 262, 42, 7, 7, '#38E08F');
+  a.fillStyle = '#C4301F'; a.beginPath(); a.arc(247, 112, 9, 0, 6.3); a.fill();
+  a.fillStyle = '#2C2F2E'; for(const x of [318, 358, 488]) a.fillRect(x, 100, 5, 20);
+});
+TX.gerPonta = tex(192, 210, (a, w, h) => {
+  a.fillStyle = '#E5E4DB'; a.fillRect(0, 0, w, h); a.strokeStyle = '#B7B6AB'; a.lineWidth = 4; a.strokeRect(6, 6, w-12, h-12);
+  a.fillStyle = '#7F7E73'; for(let y = 18; y < h-18; y += 10) a.fillRect(16, y, w-32, 5);
+});
+TX.telas = [0,1,2,3].map(i => par(256, 144, (a, b, w, h) => {
+  a.fillStyle = '#0B131A'; a.fillRect(0, 0, w, h); a.fillStyle = '#16212B'; a.fillRect(0, 0, w, 16);
+  a.fillStyle = '#9AA9B4'; a.fillRect(8, 6, 50+i*8, 4); a.fillStyle = '#38E08F'; a.fillRect(w-16, 5, 6, 6);
+  a.strokeStyle = 'rgba(150,175,190,.14)'; a.lineWidth = 1; for(let y = 34; y < h-8; y += 20){ a.beginPath(); a.moveTo(10, y); a.lineTo(w*.62, y); a.stroke(); }
+  a.strokeStyle = i%2 ? '#8CCB9F' : '#7BB8D6'; a.lineWidth = 2; a.beginPath(); let y = h*.55;
+  for(let x = 12; x < w*.6; x += 8){ y = Math.max(34, Math.min(h-24, y+(rnd()-.5)*22)); x === 12 ? a.moveTo(x, y) : a.lineTo(x, y); } a.stroke();
+  for(let k = 0; k < 6; k++){ const bh = 14+rnd()*(h*.42); a.fillStyle = k === 3 ? '#D9A441' : '#4D7E96'; a.fillRect(w*.68+k*12, h-12-bh, 8, bh); }
+  a.fillStyle = '#26333E'; a.fillRect(10, h-12, 60, 4); a.fillStyle = '#6A7B88'; a.fillRect(80, h-12, 30, 4);
+  b.drawImage(a.canvas, 0, 0);
+}));
+TX.pisoTec = tex(128, 128, (a, w, h) => {
+  a.fillStyle = '#9DA3A8'; a.fillRect(0, 0, w, h); a.fillStyle = 'rgba(0,0,0,.05)'; for(let i = 0; i < 80; i++) a.fillRect(rnd()*w, rnd()*h, 2, 2);
+  a.strokeStyle = '#6E767C'; a.lineWidth = 3; a.strokeRect(0, 0, w, h); a.fillStyle = '#7A8288'; for(const x of [4, w-4]) for(const y of [4, h-4]){ a.beginPath(); a.arc(x, y, 2.5, 0, 6.3); a.fill(); }
+});
+TX.pisoPerf = tex(128, 128, (a, w, h) => {
+  a.fillStyle = '#8D9499'; a.fillRect(0, 0, w, h); a.fillStyle = '#343A3F';
+  for(let y = 12; y < h-8; y += 13) for(let x = 12; x < w-8; x += 13) a.fillRect(x, y, 7, 7);
+  a.strokeStyle = '#6A7278'; a.lineWidth = 3; a.strokeRect(0, 0, w, h);
+});
+TX.concreto = tex(256, 256, (a, w, h) => {
+  a.fillStyle = '#A6A8A4'; a.fillRect(0, 0, w, h);
+  for(let i = 0; i < 700; i++){ a.fillStyle = rnd() < .5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.07)'; a.fillRect(rnd()*w, rnd()*h, 1+rnd()*3, 1+rnd()*3); }
+  a.strokeStyle = '#8B8D89'; a.lineWidth = 2; a.strokeRect(0, 0, w, h);
+});
+TX.paredeCofre = tex(128, 256, (a, w, h) => {
+  a.fillStyle = '#EDEFEE'; a.fillRect(0, 0, w, h); const g = a.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.06)'); a.fillStyle = g; a.fillRect(0, 0, w, h);
+  a.fillStyle = '#A9B1B5'; a.fillRect(0, 0, 3, h); a.fillStyle = '#C8CED1'; a.fillRect(3, 0, 2, h);
+  a.fillStyle = '#9AA2A6'; for(const y of [24, h-24]) a.fillRect(10, y, 3, 3);
+});
+TX.leito = tex(64, 64, (a, w, h) => { a.clearRect(0, 0, w, h); a.strokeStyle = '#A9B0B5'; a.lineWidth = 2.5; a.strokeRect(0, 0, w, h); a.beginPath(); a.moveTo(0, h/2); a.lineTo(w, h/2); a.stroke(); });
+const texHalo = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 6, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,176,60,.95)'); g.addColorStop(.5, 'rgba(255,160,50,.4)'); g.addColorStop(1, 'rgba(255,150,40,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
+function repete(t, rx, ry){ const c = t.clone(); c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(rx, ry); c.needsUpdate = true; return c; }
+
+// ---------- Peças, materiais por unidade e subsistema (o esmaecimento do mês age no material) ----------
+const gc = {};
+const bg = (w, h, d) => gc['b'+w+'_'+h+'_'+d] || (gc['b'+w+'_'+h+'_'+d] = new THREE.BoxGeometry(w, h, d));
+const pg = (w, h) => gc['p'+w+'_'+h] || (gc['p'+w+'_'+h] = new THREE.PlaneGeometry(w, h));
+const cg = (r, h, n = 20) => gc['c'+r+'_'+h+'_'+n] || (gc['c'+r+'_'+h+'_'+n] = new THREE.CylinderGeometry(r, r, h, n));
+const std = o => new THREE.MeshStandardMaterial(o);
+const clicaveis = [], etiquetas = [], S = {u1:{}, u2:{}}, matC = {};
+function MP(id, sb, nome, fn){
+  const k = id+sb+nome;
+  if(!matC[k]){ const m = fn(); (Array.isArray(m) ? m : [m]).forEach(x => { x.userData.ei = x.emissiveIntensity; (S[id].mats[sb] = S[id].mats[sb] || []).push(x); }); matC[k] = m; }
+  return matC[k];
+}
+const M = {
+  branco: std({color:0xCDCDC7, roughness:.88}),
+  epoxi: std({color:0xA5AAAD, roughness:.3, metalness:.05}),
+  carpete: std({color:0x666C72, roughness:.95}),
+  aco: std({color:0x8A939A, metalness:.6, roughness:.45}),
+  grafite: std({color:0x2A2E32, roughness:.6, metalness:.3}),
+  calha: std({color:0x3A4045, roughness:.8}),
+  portaCF: std({color:0x8F999F, roughness:.5, metalness:.4}),
+  vidro: std({color:0xCFE8F2, transparent:true, opacity:.2, roughness:.1, metalness:0, depthWrite:false, side:THREE.DoubleSide}),
+  leito: std({color:0xA9B0B5, roughness:.5, metalness:.7}),
+  tubo: std({color:0x2D3235, roughness:.7}),
+  cobre: std({color:0xB8764A, roughness:.4, metalness:.8}),
+  vermelho: std({color:0xB92A20, roughness:.45, metalness:.3}),
+  tela: std({color:0x0B0C0D, roughness:.5, metalness:.3}),
+};
+function parte(pai, geo, mat, x, y, z, ry = 0, sombra = false, rx = 0){ const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.castShadow = sombra; m.receiveShadow = true; pai.add(m); return m; }
+const plano = (pai, w, h, x, y, z, mat, ry = 0, rx = 0) => parte(pai, pg(w, h), mat, x, y, z, ry, false, rx);
+const est = (g, mat, w, h, d, x, y0, z) => parte(g, bg(w, h, d), mat, x, y0+h/2, z, 0, true);
+function corpo(g, mat, w, h, d, x, y0, z, rot){ const m = est(g, mat, w, h, d, x, y0, z); m.rotation.y = rot; return m; }
+function fantasma(g, w, h, d, x, z, y = 0){
+  const m = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)), new THREE.LineDashedMaterial({color:C.achado, dashSize:.2, gapSize:.12}));
+  m.computeLineDistances(); m.position.set(x, y+h/2, z); m.visible = false;
+  const alvo = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshBasicMaterial({visible:false})); m.add(alvo);
+  g.add(m); return m;
+}
+function etq(id, texto, x, y, z, fora, p){
+  const el = document.createElement('div'); el.className = 'etq'+(fora?' fora':''); el.innerHTML = texto; $('#etqs').appendChild(el);
+  etiquetas.push({el, id, pos:new THREE.Vector3(U[id].cx+x, y, z), fora:!!fora, p:!!p});
+}
+function clic(m, id, k, f){ if(!f){ const sb = KSUB[k]; (S[id].porSub[sb] = S[id].porSub[sb] || []).push(m); } m.userData.id = id; m.userData[f?'f':'k'] = k; clicaveis.push(f ? m.children[0] : m); if(f){ m.children[0].userData = {id, f:k}; } }
+
+const PISO = .3;   // piso elevado da sala-cofre, em metros
+function rack(g, id, x, z, rot, i){
+  const sb = 'celula', W = .6, H = 2, D = 1.07, t = TX.rf[i%3];
+  const mc = MP(id, sb, 'rack', () => std({color:0x2B2E32, roughness:.6, metalness:.4}));
+  const mf = MP(id, sb, 'rf'+(i%3), () => std({map:t.map, emissiveMap:t.em, emissive:0xFFFFFF, emissiveIntensity:2.4, roughness:.5, metalness:.4}));
+  const mt = MP(id, sb, 'rt', () => std({map:TX.rt.map, roughness:.6, metalness:.4}));
+  const mm = MP(id, sb, 'rm', () => std({color:0x8E9499, roughness:.4, metalness:.8}));
+  const m = corpo(g, mc, W, H, D, x, PISO, z, rot);
+  plano(m, .56, 1.9, 0, 0, D/2+.004, mf); plano(m, .56, 1.9, 0, 0, -D/2-.004, mt, Math.PI);
+  parte(m, bg(.02, .5, .03), mm, .23, 0, D/2+.02); parte(m, bg(.02, .4, .03), mm, -.04, 0, -D/2-.02); parte(m, bg(.02, .4, .03), mm, .04, 0, -D/2-.02);
+  m.userData.grupo = 'rack'+(z < 0 ? 'N' : 'S'); clic(m, id, 'carga'); S[id].racks.push(m); return m;
+}
+function crac(g, id, x, z, w){
+  const sb = 'clima', H = 1.97, D = .85;
+  const mc = MP(id, sb, 'crac', () => std({color:0xE9ECEC, roughness:.45, metalness:.25}));
+  const mf = MP(id, sb, 'cracF', () => std({map:TX.cracF.map, emissiveMap:TX.cracF.em, emissive:0xFFFFFF, emissiveIntensity:1.6, roughness:.45, metalness:.2}));
+  const mg = MP(id, sb, 'cracT', () => std({map:TX.cracTopo, roughness:.6, metalness:.3}));
+  const m = corpo(g, mc, w, H, D, x, PISO, z, -Math.PI/2);
+  plano(m, w-.04, H-.04, 0, 0, D/2+.004, mf); plano(m, w-.2, D-.22, 0, H/2+.003, 0, mg, 0, -Math.PI/2);
+  m.userData.grupo = 'crac'; clic(m, id, 'prec'); return m;
+}
+function cond(g, id, x, z, cw, fans){
+  const sb = 'clima', H = 1.05, D = .85, y0 = .1+.25, s = S[id];
+  const mc = MP(id, sb, 'cond', () => std({color:0xB4B9BC, roughness:.5, metalness:.4}));
+  const ml = MP(id, sb, 'condL', () => std({map:TX.condLado, roughness:.55, metalness:.4}));
+  const mk = MP(id, sb, 'condK', () => std({color:0x2A2E31, roughness:.7, metalness:.3}));
+  const mgr = MP(id, sb, 'grade', () => std({map:TX.grade, transparent:true, alphaTest:.4, side:THREE.DoubleSide, roughness:.6}));
+  const mp = MP(id, sb, 'pas', () => std({map:TX.pas, transparent:true, alphaTest:.4, side:THREE.DoubleSide, roughness:.6}));
+  const m = corpo(g, mc, cw, H, D, x, y0, z, -Math.PI/2);
+  parte(m, bg(cw-.1, .24, D-.1), mk, 0, -H/2-.12, 0);
+  plano(m, cw-.06, H-.1, 0, 0, D/2+.004, ml); plano(m, cw-.06, H-.1, 0, 0, -D/2-.004, ml, Math.PI);
+  plano(m, D-.06, H-.1, cw/2+.004, 0, 0, ml, Math.PI/2); plano(m, D-.06, H-.1, -cw/2-.004, 0, 0, ml, -Math.PI/2);
+  plano(m, cw-.08, D-.08, 0, H/2+.003, 0, mk, 0, -Math.PI/2);
+  for(let j = 0; j < fans; j++){ const fx = (j-(fans-1)/2)*(cw/fans);
+    const gp = new THREE.Group(); gp.position.set(fx, H/2+.012, 0); m.add(gp); plano(gp, .56, .56, 0, 0, 0, mp, 0, -Math.PI/2); s.vent.push(gp);
+    plano(m, .62, .62, fx, H/2+.05, 0, mgr, 0, -Math.PI/2);
+    const anel = parte(m, new THREE.TorusGeometry(.32, .02, 8, 28), mk, fx, H/2+.045, 0); anel.rotation.x = Math.PI/2; }
+  m.userData.grupo = 'cond'; clic(m, id, 'prec'); return m;
+}
+function ups(g, id, k, x, z){
+  const sb = 'energia', W = .6, H = 1.9, D = .85;
+  const mc = MP(id, sb, 'ups', () => std({color:0x464B51, roughness:.55, metalness:.4}));
+  const mf = MP(id, sb, 'upsF', () => std({map:TX.ups.map, emissiveMap:TX.ups.em, emissive:0xFFFFFF, emissiveIntensity:1.8, roughness:.5, metalness:.3}));
+  const m = corpo(g, mc, W, H, D, x, .03, z, 0); plano(m, W-.02, H-.02, 0, 0, D/2+.004, mf); S[id].nos[k] = m; clic(m, id, k); return m;
+}
+function painel(g, id, k, x, z, W, H, v, grupo){
+  const sb = 'energia', D = .6;
+  const mc = MP(id, sb, 'pn', () => std({color:0xC5CAC7, roughness:.5, metalness:.35}));
+  const mf = MP(id, sb, 'pnF'+v, () => std({map:TX.painel[v].map, emissiveMap:TX.painel[v].em, emissive:0xFFFFFF, emissiveIntensity:1.8, roughness:.5, metalness:.3}));
+  const m = corpo(g, mc, W, H, D, x, .03, z, 0); plano(m, W-.03, H-.04, 0, 0, D/2+.004, mf);
+  m.userData.grupo = grupo; clic(m, id, k); return m;
+}
+function trafo(g, id, x, z){
+  const sb = 'energia', W = 1.7, H = 2, D = 1.2;
+  const mc = MP(id, sb, 'tr', () => std({color:0xC2C7C4, roughness:.5, metalness:.35}));
+  const mf = MP(id, sb, 'trF', () => std({map:TX.trafo, roughness:.5, metalness:.3}));
+  const m = corpo(g, mc, W, H, D, x, .03, z, 0); plano(m, W-.03, H-.04, 0, 0, D/2+.004, mf);
+  for(const dx of [-.6, .6]) parte(m, bg(.1, .08, .1), MP(id, sb, 'olhal', () => std({color:0x6E767B, metalness:.7, roughness:.4})), dx, H/2+.04, 0);
+  S[id].nos.rede = m; clic(m, id, 'rede'); return m;
+}
+function gerador(g, id, k, x, z, y0){
+  const sb = 'energia', W = 4.2, H = 2.2, D = 1.5, hc = H-.45;
+  const mc = MP(id, sb, 'ge', () => std({color:0xE3E2D9, roughness:.5, metalness:.2}));
+  const mk = MP(id, sb, 'geK', () => std({color:0x2B2F32, roughness:.7, metalness:.3}));
+  const ms = MP(id, sb, 'geS', () => std({map:TX.gerLado.map, emissiveMap:TX.gerLado.em, emissive:0xFFFFFF, emissiveIntensity:1.6, roughness:.5, metalness:.2}));
+  const mp = MP(id, sb, 'geP', () => std({map:TX.gerPonta, roughness:.5, metalness:.2}));
+  const mi = MP(id, sb, 'geI', () => std({color:0x5A6065, roughness:.5, metalness:.6}));
+  const m = corpo(g, mc, W, H, D, x, y0, z, -Math.PI/2);
+  parte(m, bg(W+.03, .45, D+.03), mk, 0, -H/2+.225, 0);
+  plano(m, W-.04, hc-.04, 0, .225, D/2+.004, ms); plano(m, W-.04, hc-.04, 0, .225, -D/2-.004, ms, Math.PI);
+  plano(m, D-.04, hc-.04, W/2+.004, .225, 0, mp, Math.PI/2); plano(m, D-.04, hc-.04, -W/2-.004, .225, 0, mp, -Math.PI/2);
+  const sil = parte(m, cg(.26, 1.15, 20), mi, -1.3, H/2+.34, .15, 0, true); sil.rotation.z = Math.PI/2;
+  parte(m, cg(.07, 1.1, 12), mi, -1.8, H/2+.62, .15, 0, true); parte(m, cg(.1, .04, 12), mi, -1.8, H/2+1.19, .15);
+  parte(m, bg(.9, .1, .8), mi, 1.0, H/2+.05, 0);
+  S[id].nos[k] = m; clic(m, id, k); return m;
+}
+function leito(g, ax, fixo, a, b, y, wd){
+  const L = Math.abs(b-a), mid = (a+b)/2, tt = repete(TX.leito, L/.3, wd/.3), mg = std({map:tt, transparent:true, alphaTest:.3, side:THREE.DoubleSide, roughness:.6, metalness:.5});
+  for(const o of [wd/2, -wd/2]){ ax === 'x' ? parte(g, bg(L, .07, .025), M.leito, mid, y, fixo+o) : parte(g, bg(.025, .07, L), M.leito, fixo+o, y, mid); }
+  if(ax === 'x') plano(g, L, wd, mid, y-.025, fixo, mg, 0, -Math.PI/2); else plano(g, wd, L, fixo, y-.025, mid, mg, 0, -Math.PI/2);
+}
+function calha(g, pts, w = .3){
+  for(let i = 0; i < pts.length-1; i++){ const [xa, za] = pts[i], [xb, zb] = pts[i+1];
+    if(Math.abs(xb-xa) > Math.abs(zb-za)) parte(g, bg(Math.abs(xb-xa)+w, .03, w), M.calha, (xa+xb)/2, .045, za); else parte(g, bg(w, .03, Math.abs(zb-za)+w), M.calha, xa, .045, (za+zb)/2); }
+}
+function parede(g, ax, fixo, a, b, h, t, mat, gaps = []){
+  const cortes = [a, ...gaps.flat(), b];
+  for(let i = 0; i < cortes.length; i += 2){ const s = cortes[i], e = cortes[i+1]; if(e-s < .01) continue;
+    if(ax === 'x') est(g, mat, e-s, h, t, (s+e)/2, 0, fixo); else est(g, mat, t, h, e-s, fixo, 0, (s+e)/2); }
+}
+const matParede = L => std({map:repete(TX.paredeCofre, L/1.2, 1), roughness:.6, metalness:.15});
+function porta(g, ax, fixo, a, b, h, t, mat, alavanca){
+  const L = b-a, c = (a+b)/2;
+  if(ax === 'x'){ est(g, mat, L-.04, h, t*.8, c, 0, fixo); if(alavanca) parte(g, bg(.22, .04, .03), M.grafite, c+L/2-.2, .95, fixo+t*.4+.02); }
+  else { est(g, mat, t*.8, h, L-.04, fixo, 0, c); if(alavanca) parte(g, bg(.03, .04, .22), M.grafite, fixo-t*.4-.02, .95, c+L/2-.2); }
+}
+function tela8(g, id, x, y0, z, i){
+  const sb = 'apoio', W = 1.22, H = .69, D = .06, t = TX.telas[i%4];
+  const mc = MP(id, sb, 'tvC', () => std({color:0x0C0D0F, roughness:.5, metalness:.4}));
+  const mt = MP(id, sb, 'tv'+(i%4), () => std({map:t.map, emissiveMap:t.em, emissive:0xFFFFFF, emissiveIntensity:1.0, roughness:.4}));
+  const m = corpo(g, mc, W, H, D, x, y0, z, 0); plano(m, W-.06, H-.06, 0, 0, D/2+.002, mt); m.userData.semHalo = true; clic(m, id, 'noc'); return m;
+}
+function bancada(g, id, x, z, zN){
+  const sb = 'apoio', W = 5.2, D = .8;
+  const mc = MP(id, sb, 'bc', () => std({color:0xD9DAD6, roughness:.6, metalness:.1}));
+  const mk = MP(id, sb, 'bk', () => std({color:0x2E3236, roughness:.6, metalness:.4}));
+  const mt = MP(id, sb, 'bt', () => std({map:TX.telas[1].map, emissiveMap:TX.telas[1].em, emissive:0xFFFFFF, emissiveIntensity:.9, roughness:.4}));
+  const m = corpo(g, mc, W, .04, D, x, .74+.03, z, 0);
+  for(const dx of [-W/2+.08, W/2-.08, 0]) parte(m, bg(.05, .74, D-.1), mk, dx, -.39, 0, 0, true);
+  for(let i = 0; i < 3; i++){ const sx = (i-1)*1.7;
+    for(const dx of [-.3, .3]){ parte(m, bg(.56, .34, .03), mk, sx+dx, .23, .05, 0, true); plano(m, .52, .3, sx+dx, .23, .068, mt); parte(m, bg(.05, .15, .05), mk, sx+dx, .08, .05); }
+    parte(m, cg(.03, .4, 8), mk, sx, -.42+.03-.0, D/2+.9); parte(m, bg(.5, .05, .5), mk, sx, -.74+.03, D/2+.9); parte(m, bg(.46, .06, .46), mk, sx, -.3, D/2+.9, 0, true); parte(m, bg(.44, .46, .05), mk, sx, -.05, D/2+1.5, 0, true); }
+  m.userData.semHalo = false; clic(m, id, 'noc'); return m;
+}
+function cilindro(g, id, x, z){
+  const sb = 'incendio', H = 1.6, R = .2;
+  const mc = MP(id, sb, 'cil', () => std({color:0xB92A20, roughness:.45, metalness:.3}));
+  const mm = MP(id, sb, 'cilM', () => std({color:0x9CA3A8, roughness:.35, metalness:.8}));
+  const m = parte(g, cg(R, H, 24), mc, x, H/2+.03, z, 0, true);
+  parte(m, new THREE.SphereGeometry(R, 20, 8, 0, 6.2832, 0, 1.2), mc, 0, H/2, 0);
+  parte(m, cg(.07, .12, 12), mm, 0, H/2+.2, 0); parte(m, bg(.14, .05, .05), mm, .09, H/2+.22, 0);
+  const tb = MP(id, sb, 'cilT', () => std({color:0xB92A20, roughness:.5, metalness:.3}));
+  parte(m, cg(.02, 1.4, 8), tb, .16, H/2+.22-.0, 0).rotation.z = Math.PI/2; m.children[m.children.length-1].position.set(.78, H/2+.22, 0);
+  m.userData.dim = true; clic(m, id, 'gas'); return m;
+}
+function detector(g, id, x, y, z){
+  const sb = 'incendio';
+  const mc = MP(id, sb, 'det', () => std({color:0xF0F2F2, roughness:.5, metalness:.1, emissive:0xFFFFFF, emissiveIntensity:0, emissiveMap:null}));
+  const ml = MP(id, sb, 'detL', () => std({color:0x111111, emissive:0x38E08F, emissiveIntensity:2.2}));
+  const m = est(g, mc, .38, .24, .14, x, y, z); m.position.y = y+.12;
+  parte(m, bg(.04, .02, .01), ml, -.12, .06, .076); parte(m, bg(.04, .02, .01), ml, -.05, .06, .076);
+  const tubo = MP(id, sb, 'detT', () => std({color:0xDDE0E1, roughness:.5}));
+  parte(m, cg(.018, .5, 8), tubo, .12, .37, -.02); parte(m, cg(.018, 1.0, 8), tubo, .12, .62, -.02).rotation.z = Math.PI/2; m.children[m.children.length-1].position.set(.62, .62, -.02);
+  m.userData.dim = true; clic(m, id, 'det'); return m;
+}
+function veste(id){   // contorno e halo de HH, depois que a unidade está montada
+  const s = S[id], u = U[id]; s.g.updateMatrixWorld(true); s.halos = {}; s.lin = {}; s.haloMat = {};
+  for(const sb of Object.keys(s.porSub)){
+    s.lin[sb] = new THREE.LineBasicMaterial({color:C.x, transparent:true, opacity:0, depthTest:true});
+    s.haloMat[sb] = new THREE.MeshBasicMaterial({map:texHalo, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false});
+    s.halos[sb] = []; const grupos = {};
+    s.porSub[sb].forEach(o => {
+      if(!o.userData.semHalo){ const bb = new THREE.Box3().setFromObject(o), k = o.userData.grupo || ('o'+o.id); grupos[k] = grupos[k] ? grupos[k].union(bb) : bb; }
+      const e = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry), s.lin[sb]); e.scale.setScalar(1.006); e.visible = false; o.add(e); (o.userData.contornos = o.userData.contornos || []).push(e);
+    });
+    for(const bb of Object.values(grupos)){ const w = bb.max.x-bb.min.x+1.5, d = bb.max.z-bb.min.z+1.5;
+      const h = new THREE.Mesh(pg(+w.toFixed(2), +d.toFixed(2)), s.haloMat[sb]); h.rotation.x = -Math.PI/2; h.position.set((bb.min.x+bb.max.x)/2-u.cx, bb.min.y+.025, (bb.min.z+bb.max.z)/2); h.renderOrder = 2; h.visible = false; s.g.add(h); s.halos[sb].push(h); }
+  }
+}
+
+function monta(id){
+  const u = U[id], g = new THREE.Group(); g.position.x = u.cx; scene.add(g);
+  const s = S[id]; Object.assign(s, {g, fios:{}, fant:[], nos:{}, porSub:{}, mats:{}, vent:[], racks:[]});
+  const cz = 0, x0 = .5, x1 = x0+u.w, z0 = cz-u.d/2, z1 = cz+u.d/2, wc = .18, hc = 1.6, hb = 1.1, tb = .14, xW = -8.4;
+  const zN = u.noc ? -7.5 : -(u.d/2+wc+1.5), zS = z1+wc+1.7, zm = (zN+zS)/2, xE = x1+wc+2.3, xP0 = -14.4;
+  const mBranco = M.branco;
+  // base da maquete e pátio de concreto
+  { const pw = xE-xP0, pd = (zS+1)-(zN-.9), cc = (a, b) => std({map:repete(TX.concreto, a/3, b/3), roughness:.9});
+    const lado = std({color:0x22272B, roughness:.8});
+    parte(g, bg(pw, .3, pd), [lado, lado, cc(pw, pd), lado, lado, lado], (xP0+xE)/2, -.15, (zN-.9+zS+1)/2, 0, false).receiveShadow = true; }
+  // piso interno do pavimento (epóxi cinza-claro) e piso do corredor
+  est(g, M.epoxi, x1+wc-xW-.07, .03, zS-zN-.07, (xW+.07+x1+wc)/2, 0, (zN+.07+zS)/2).castShadow = false;
+  // pátio dos geradores, com laje elevada e mureta de contenção
+  { const xa = -13.6, xb = xW-.07, za = zN+.3, zb = zS-.2, lj = std({map:repete(TX.concreto, (xb-xa)/2.5, (zb-za)/2.5), roughness:.9, color:0xD5D6D2});
+    est(g, lj, xb-xa, .12, zb-za, (xa+xb)/2, 0, (za+zb)/2);
+    est(g, lj, .15, .32, zb-za, xa+.075, 0, (za+zb)/2); est(g, lj, xb-xa, .32, .15, (xa+xb)/2, 0, za+.075); est(g, lj, xb-xa, .32, .15, (xa+xb)/2, 0, zb-.075);
+    // laje das condensadoras
+    est(g, lj, 2.1, .1, u.d+.4, x1+wc+1.1, 0, cz); }
+  // paredes do pavimento técnico (cortadas a 1,1 m), com portas
+  const zPortaS = [-3.3, -2.0], zPortaW = [zS-2.5, zS-1.3];
+  parede(g, 'x', zN, xW-tb/2, x1+wc, hb, tb, mBranco);
+  parede(g, 'x', zS, xW-tb/2, x1+wc, hb, tb, mBranco, [zPortaS]);
+  parede(g, 'z', xW, zN, zS, hb, tb, mBranco, [zPortaW]);
+  porta(g, 'x', zS, zPortaS[0], zPortaS[1], hb, tb, M.aco, true); porta(g, 'z', xW, zPortaW[0], zPortaW[1], hb, tb, M.aco, true);
+  // sala-cofre: painéis modulares, paredes mais grossas e mais altas
+  const wN = matParede(u.w+2*wc), wL = matParede(u.d+2*wc);
+  parede(g, 'x', z0-wc/2, x0-wc, x1+wc, hc, wc, wN); parede(g, 'x', z1+wc/2, x0-wc, x1+wc, hc, wc, wN);
+  parede(g, 'z', x1+wc/2, z0-wc, z1+wc, hc, wc, wL);
+  const gP = [z1-1.25, z1-.25]; parede(g, 'z', x0-wc/2, z0-wc, z1+wc, hc, wc, wL, [gP]);
+  { const mf = M.portaCF; est(g, mf, wc*.9, hc, gP[1]-gP[0]-.04, x0-wc/2, 0, (gP[0]+gP[1])/2);
+    parte(g, bg(.04, .05, .3), M.grafite, x0-wc-.02, .95, gP[1]-.3); parte(g, bg(.03, hc, .06), M.grafite, x0-wc-.0, hc/2, gP[0]); parte(g, bg(.03, hc, .06), M.grafite, x0-wc-.0, hc/2, gP[1]); }
+  // piso elevado (placas de 600 mm) e corredor frio perfurado
+  { const lado = std({color:0x5B6268, roughness:.8}), top = std({map:repete(TX.pisoTec, u.w/.6, u.d/.6), roughness:.4, metalness:.2});
+    parte(g, bg(u.w, PISO, u.d), [lado, lado, top, lado, lado, lado], x0+u.w/2, PISO/2+.03-.03, cz).receiveShadow = true; }
+  const N = Math.floor((u.w-.6-.85-.9)/.6), xr0 = x0+.6, xr1 = xr0+N*.6;
+  plano(g, N*.6, 1.2, (xr0+xr1)/2, PISO+.003, 0, std({map:repete(TX.pisoPerf, N, 2), roughness:.45, metalness:.2}), 0, -Math.PI/2);
+  // racks em duas fileiras contínuas, frente com frente
+  for(let i = 0; i < N; i++){ rack(g, id, xr0+.3+i*.6, -1.135, 0, i); rack(g, id, xr0+.3+i*.6, 1.135, Math.PI, i+1); }
+  // confinamento do corredor frio: teto e portas de policarbonato
+  parte(g, bg(N*.6, .02, 1.2), M.vidro, (xr0+xr1)/2, PISO+2.01, 0);
+  for(const xx of [xr0-.02, xr1+.02]){ parte(g, bg(.03, 2.0, 1.2), M.vidro, xx, PISO+1.0, 0); parte(g, bg(.04, 2.0, .04), M.aco, xx, PISO+1.0, -.6); parte(g, bg(.04, 2.0, .04), M.aco, xx, PISO+1.0, .6); }
+  // eletrocalhas aramadas sobre as fileiras e entrada pela parede
+  leito(g, 'x', -1.135, xr0, xr1+.4, PISO+2.5, .35); leito(g, 'x', 1.135, xr0, xr1+.4, PISO+2.5, .35); leito(g, 'z', xr0+.05, -1.135, 1.135, PISO+2.5, .35);
+  // climatização de precisão encostada na parede leste, condensadoras no pátio com tubulação frigorígena
+  const ph = (u.d-.2)/u.prec, cw = Math.min(1.3, ph-.14), fans = cw > 1.1 ? 2 : 1;
+  for(let i = 0; i < u.prec; i++){ const z = z0+.1+ph*(i+.5);
+    crac(g, id, x1-.425-.02, z, ph); const xc = x1+wc+.45+.425; cond(g, id, xc, z, cw, fans);
+    for(const [dz, r, mt, y] of [[-.06, .025, M.tubo, .48], [.06, .014, M.cobre, .58]]){ const p = parte(g, cg(r, .5, 8), mt, x1+wc+.22, y, z+dz); p.rotation.z = Math.PI/2; } }
+  etq(id, `<b>${u.prec} conjuntos</b> de climatização de precisão`, x1+wc+1.2, 1.9, z0-.9);
+  // incêndio: cilindro (ou o lugar dele), tubulação vermelha e detector por aspiração na parede da sala
+  const xcil = x0+1.1, zcil = z1+wc+.35;
+  if(u.cilindro){ cilindro(g, id, xcil, zcil); etq(id, '<b>Cilindro de gás</b>', xcil, 2.0, zcil); }
+  else { const c = fantasma(g, .5, 1.7, .5, xcil, zcil); s.fant.push(c); clic(c, id, 'cilindro', true); etq(id, 'cilindro de gás', xcil, 2.0, zcil, true); }
+  detector(g, id, x0+3.6, .95, z1+wc+.08);
+  // quadros: painel de detecção (fantasma na unidade que não lista) e sensores
+  if(!u.painel){ const p = fantasma(g, .9, 1.6, .3, x0-wc-.3, cz-1.4, .5); s.fant.push(p); clic(p, id, 'painel', true); etq(id, 'painel de detecção', x0-wc-.3, 2.4, cz-1.4, true); }
+  [[x0+.35, z0+.4],[x1-1.0, z1-.4]].forEach(p => { const f = fantasma(g, .25, .25, .25, p[0], p[1], PISO+2.3); s.fant.push(f); clic(f, id, 'sensores', true); });
+  // sala elétrica: entrada de energia, quadro geral, chaves de transferência, UPS e baterias
+  const z1r = zN+.55, zup = zS-1.6, z2r = (z1r+zup)/2;
+  trafo(g, id, -7.4, z1r); etq(id, '<b>Rede</b>', -7.4, 2.5, z1r);
+  { const ws = [.8, .8, .6, .8, .8, .6], nq = u.quadros >= 15 ? 6 : 5; let xx = -6.3;
+    for(let i = 0; i < nq; i++){ const w = ws[i]; painel(g, id, 'qd', xx+w/2, z1r, w, 2.2, [0, 1, 2, 0, 1, 2][i], 'qgbt'); xx += w; }
+    leito(g, 'x', z1r, -8.0, xx+.2, 2.6, .4); leito(g, 'z', xx+.2, z1r, 0, 2.6, .4); leito(g, 'x', 0, xx+.2, xr0+.05, PISO+2.5, .4);
+    if(zN < -5) leito(g, 'z', -8.0, z1r, z2r, 2.6, .4);
+  }
+  if(u.ats){ let xx = -6.8; for(let i = 0; i < u.ats; i++){ painel(g, id, 'transf', xx+.35, z2r, .7, 2.1, [1, 0, 2, 0, 1][i%5], 'ats'); xx += .7; }
+    etq(id, `<b>${u.ats} chaves</b> de transferência`, -6.8+u.ats*.35, 2.6, z2r); }
+  else { painel(g, id, 'transf', -6.2, z2r, 1.2, 2.1, 0, 'ats'); etq(id, '<b>Quadro</b> de transferência', -6.2, 2.6, z2r); }
+  [['upsx', -6.1, '1'], ['upsy', -3.8, '2']].forEach(([k, x, l]) => {
+    ups(g, id, k, x, zup); etq(id, `<b>UPS ${l}</b> ${u.ups[1]}`, x, 2.3, zup);
+    const b = fantasma(g, 1.2, 1.9, .85, x+.9, zup, .03); s.fant.push(b); clic(b, id, 'bateria', true); });
+  etq(id, 'baterias', -4.5, 2.3, zup+.8, true);
+  // faixas de segurança no piso, a 1 m da frente de cada fileira de painéis e UPS
+  { const faixa = std({color:0xD2AE2C, roughness:.6}); for(const [zz, xa, xb] of [[z1r+.95, -8.0, -1.4], [z2r+.95, -7.0, -3.0], [zup+1.0, -6.6, -2.4]]) parte(g, bg(xb-xa, .004, .06), faixa, (xa+xb)/2, .032, zz); }
+  // geradores carenados em laje no pátio externo, silenciosos e escapamento no teto
+  const zg = [zm-2.7, zm+2.7];
+  u.ger.forEach((ge, i) => { gerador(g, id, 'g'+(i+1), -11.3, zg[i], .12); etq(id, `<b>Gerador ${i+1}</b> ${ge[0]}`, -11.3, 3.5, zg[i]);
+    calha(g, [[-10.2, zg[i]], [-7.9-i*.5, zg[i]], [-7.9-i*.5, z2r+1.0], [-3.2, z2r+1.0]]); });
+  calha(g, [[-6.4, z1r+.95], [-6.4, z2r-.7]], .2);
+  // sala de operação com bancada e parede de 8 monitores (só na Unidade 1)
+  if(u.noc){ const xn = (x0+x1)/2-.03, zw = zN+.07;
+    parede(g, 'z', x0-wc-.07, zN, z0-wc, hb, tb, mBranco, [[zN+2.2, zN+3.2]]); porta(g, 'z', x0-wc-.07, zN+2.2, zN+3.2, hb, tb, M.aco, true);
+    parede(g, 'z', x1+wc-.07, zN, z0-wc, hb, tb, mBranco);
+    est(g, M.branco, x1+wc-.07-(x0-wc-.07)+tb, 3.0, tb, ((x1+wc-.07)+(x0-wc-.07))/2, 0, zN);   // a parede de fundo sobe inteira para sustentar os monitores
+    plano(g, (x1+wc-.14)-(x0-wc)-.02, z0-wc-zN-.08, ((x1+wc-.14)+(x0-wc))/2, .036, (zN+.07+z0-wc)/2, M.carpete, 0, -Math.PI/2);
+    est(g, M.grafite, 5.3, 2.15, .03, xn, .95, zw+.03);
+    for(let i = 0; i < 8; i++) tela8(g, id, xn+((i%4)-1.5)*1.25, 1.0+Math.floor(i/4)*.72, zw+.065, i);
+    bancada(g, id, xn, zN+2.9, zN);
+    etq(id, '<b>Sala de operação</b> 8 monitores', xn, 3.45, zN+.3, false, true); }
+  // cabos de energia entre a sala elétrica e o cofre: já cobertos pelas eletrocalhas
+  s.luz = {intensity:0};
+  const fc = fantasma(g, u.w+.5, 2.9, u.d+.5, x0+u.w/2, cz); s.fant.push(fc); clic(fc, id, 'celula', true); etq(id, 'porta, blindagens, piso elevado', x0+u.w/2, .5, z1+wc+.9, true);
+  const fr = fantasma(g, N*.6+.2, 2.4, 3.6, (xr0+xr1)/2, cz, PISO); s.fant.push(fr); clic(fr, id, 'racks', true); etq(id, 'racks e rede', (xr0+xr1)/2, 3.05, cz, true);
+  etq(id, `<b>Sala-cofre</b> ${u.area} m²`, x0+u.w/2, 3.2, z0-.3, false, true);
+  etq(id, `<b>${u.nome}</b> · ${u.end}`, x0+u.w*.55, .1, zS+.9, false, true);
+  veste(id);
+}
+monta('u1'); monta('u2');
+
+// ---------- Análise: horas do plano por equipamento e calendário do ano ----------
+const H = horasPreventiva();
+const n0 = v => Math.round(v).toLocaleString('pt-BR');
+const ids = () => foco==='duas' ? ['u1','u2'] : [foco];
+const FREQ = {12:'mensal', 6:'a cada 2 meses', 4:'trimestral', 3:'a cada 4 meses', 2:'semestral', 1:'anual'};
+const maxAno = Math.max(...['u1','u2'].flatMap(id => Object.keys(SUBSISTEMAS).map(sb => H.porUnidade[id][sb])));
+const cal = () => calendario(PADRAO, nivelar);
+const horasMes = (m, lista) => lista.reduce((s, id) => s + m.porUnidade[id], 0);
+function porSubNoMes(m, id){ const o = {}; for(const it of m.itens) if(it.unidade===id) o[it.sub] = (o[it.sub]||0) + it.horas; return o; }
+
+// Leitura de HH: o corpo dos equipamentos mantém a cor real. Quem mostra as HH é o halo âmbar no piso
+// (proporcional às HH) e o contorno âmbar fino no equipamento. No modo "mês", o que não tem serviço fica esmaecido.
+function aquece(){
+  const c = cal(), m = mes ? c.meses[mes-1] : null;
+  const noMes = m ? {u1:porSubNoMes(m,'u1'), u2:porSubNoMes(m,'u2')} : null;
+  const maxMes = m ? Math.max(1e-9, ...Object.values(noMes.u1), ...Object.values(noMes.u2)) : 1;
+  for(const id of ['u1','u2']){ const s = S[id];
+    for(const sb of Object.keys(SUBSISTEMAS)){
+      const t = m ? (noMes[id][sb]||0)/maxMes : H.porUnidade[id][sb]/maxAno, ativo = !m || t>0;
+      const k = ativo ? Math.pow(t, .75) : 0;
+      if(s.haloMat[sb]){ s.haloMat[sb].opacity = ativo ? .12+.83*k : 0; (s.halos[sb]||[]).forEach(h=>h.visible = ativo); }
+      if(s.lin[sb]){ s.lin[sb].opacity = ativo ? Math.min(1, .35+.65*t) : 0; (s.porSub[sb]||[]).forEach(o=>(o.userData.contornos||[]).forEach(e=>e.visible = ativo)); }
+      (s.mats[sb]||[]).forEach(mt=>{ const tr = !ativo; if(mt.userData.tr !== tr){ mt.userData.tr = tr; mt.transparent = tr || !!mt.alphaTest; mt.needsUpdate = true; }
+        mt.opacity = ativo ? 1 : .24; if(mt.userData.ei > 0) mt.emissiveIntensity = mt.userData.ei*(ativo ? 1 : .2); });
+    }
+    s.fant.forEach(f=>f.visible = lente==='plano');
+  }
+}
+function pintaCalendario(){
+  const c = cal(), cru = calendario(PADRAO, false), L = ids();
+  const v = c.meses.map(m=>horasMes(m, L)), topo = Math.max(...cru.meses.map(m=>horasMes(m, L)));
+  $('#calRot').textContent = 'Carga mensal de preventiva · ' + (foco==='duas' ? 'as duas unidades' : U[foco].nome);
+  const pico = Math.max(...v), vale = Math.min(...v);
+  $('#calFrase').innerHTML = mes
+    ? `<b>Mês ${mes}: ${n0(v[mes-1])} HH de preventiva</b> em ${L.reduce((s,id)=>s+c.meses[mes-1].rotinas[id],0)} rotinas. Em destaque, os subsistemas com serviço programado no mês.`
+    : nivelar ? `<b>Calendário proposto: de ${n0(vale)} a ${n0(pico)} HH por mês.</b> Mesmo plano, com o início de cada rotina deslocado dentro da própria periodicidade.`
+              : `<b>Com todas as periodicidades contadas a partir da assinatura: ${n0(v[0])} HH no mês 1 e ${n0(v[1])} HH no mês 2.</b> A carga mensal varia de ${n0(vale)} a ${n0(pico)} HH.`;
+  $('#calBarras').innerHTML = v.map((h,i)=>{ const a = Math.max(2, h/topo*56), x = 4+i*29.6; return `<rect data-mes="${i+1}" x="${x}" y="${58-a}" width="24" height="${a}" rx="3" fill="${mes===i+1?'#F2A93B':mes?'#3A444B':'#8A6A2E'}"><title>Mês ${i+1}: ${n0(h)} h</title></rect><text x="${x+12}" y="71" text-anchor="middle" font-size="9" fill="#5F6B73">${i+1}</text>`; }).join('');
+  $('#mesTxt').textContent = mes ? 'Mês '+mes : 'Ano inteiro';
+  $('#mes').value = mes;
+}
+function pinta(){
+  const L = ids(), total = L.reduce((s,id)=>s+H.porUnidade[id].total,0);
+  const tops = Object.keys(SUBSISTEMAS).map(sb=>[sb, L.reduce((s,id)=>s+H.porUnidade[id][sb],0)]).sort((a,b)=>b[1]-a[1]);
+  $('#manchete').innerHTML = lente==='plano'
+    ? '<em>Seis itens</em> do plano de manutenção não constam do inventário. A célula soma 76 das 172 execuções do ano.'
+    : `${n0(total)} HH de preventiva por ano ${foco==='duas'?'nas duas unidades':'na '+U[foco].nome.split(' ·')[0]}. ${SUBSISTEMAS[tops[0][0]]}: ${n0(tops[0][1]/total*100)}% do total.`;
+  aquece(); pintaCalendario();
+}
+function barras(pares){ const mx = Math.max(...pares.map(p=>p[1])); return `<div class="barh">${pares.map(p=>`<span>${p[0]}</span><i style="width:${Math.max(3,p[1]/mx*100)}%"></i><span>${n0(p[1])} h</span>`).join('')}</div>`; }
+function painelGeral(){
+  const L = ids(), c = cal();
+  if(mes){ const m = c.meses[mes-1], its = m.itens.filter(it=>L.includes(it.unidade));
+    const porAtiv = {}; its.forEach(it=>{ porAtiv[it.id] = porAtiv[it.id] || {nome:it.nome, h:0}; porAtiv[it.id].h += it.horas; });
+    const lst = Object.values(porAtiv).sort((a,b)=>b.h-a.h);
+    $('#lado').innerHTML = `<h3>Mês ${mes} do contrato</h3><p>${n0(horasMes(m,L))} HH de preventiva em ${lst.length} atividades.</p><div class="rot">Atividades programadas no mês</div><div class="ativ">${lst.map(a=>`<span>${a.nome}</span><span>${a.h.toLocaleString('pt-BR',{maximumFractionDigits:1})} h</span>`).join('')}</div>`;
+    return; }
+  const pares = Object.keys(SUBSISTEMAS).map(sb=>[SUBSISTEMAS[sb], L.reduce((s,id)=>s+H.porUnidade[id][sb],0)]).sort((a,b)=>b[1]-a[1]);
+  $('#lado').innerHTML = `<h3>HH de preventiva por subsistema</h3><p>30 atividades e 172 execuções por ano do plano de manutenção, multiplicadas pelas quantidades do inventário de cada unidade.</p><div class="rot">HH por ano · ${foco==='duas'?'as duas unidades':U[foco].nome}</div>${barras(pares)}<div class="rot">As duas unidades</div><div class="ativ"><span>Ativos no inventário</span><span>${UNIDADES.u1.ativos} e ${UNIDADES.u2.ativos}</span><span>HH de preventiva por ano</span><span>${n0(H.porUnidade.u1.total)} e ${n0(H.porUnidade.u2.total)}</span><span>Climatização de precisão</span><span>${UNIDADES.u1.precisao} e ${UNIDADES.u2.precisao} conjuntos</span></div><div class="rot">Clique no equipamento para listar as atividades. HH por execução: premissa da proposta, em três pontos.</div>`;
+}
+function lista(id, sb){
+  const ls = H.linhas.filter(l=>l.unidade===id && l.sub===sb && l.horas>0).sort((a,b)=>b.horas-a.horas);
+  return `<div class="rot">${SUBSISTEMAS[sb]} · ${U[id].nome} · ${n0(H.porUnidade[id][sb])} HH por ano, ${n0(H.porUnidade[id][sb]/H.porUnidade[id].total*100)}% da unidade</div><div class="ativ">${ls.map(l=>{ const a = ATIVIDADES.find(x=>x.id===l.id); return `<span>${a.nome}<br><small style="color:var(--fraco)">${a.sobDemanda?'por intervenção':FREQ[a.freq]}</small></span><span>${n0(l.horas)} h</span>`; }).join('')}</div>`;
+}
+function painelNo(id, k){
+  const u = U[id];
+  const T = {
+    rede:['Entrada de energia','O plano pede, uma vez por semestre, teste dos geradores com a carga da concessionária.'],
+    g1:[`Gerador 1 · ${u.ger[0][0]}`,`${u.ger[0][1]}. Teste mensal de 15 minutos e verificação do nível de diesel.`],
+    g2:[`Gerador 2 · ${u.ger[1][0]}`,`${u.ger[1][1]}. ${u.ger[0][1]===u.ger[1][1]?'Mesmo fabricante e mesma potência do gerador 1: um só jogo de peças e de treinamento.':'Fabricante diferente do gerador 1: dois jogos de peças e dois treinamentos na mesma unidade.'}`],
+    transf:['Transferência', u.ats ? `${u.ats} chaves de transferência automática, de dois modelos do Fabricante C.` : 'Um quadro de transferência estática. Nenhuma chave de transferência automática aparece no inventário desta unidade.'],
+    upsx:[`UPS 1${u.ups[1]?' · '+u.ups[1]:''}`,`${u.ups[0]}. O fabricante é diferente do da outra unidade: dois estoques de peças críticas e dois treinamentos.`],
+    upsy:[`UPS 2${u.ups[1]?' · '+u.ups[1]:''}`,`${u.ups[0]}. Verificação trimestral de parâmetros, limpeza e calibração.`],
+    qd:['Quadros de distribuição',`${u.quadros} quadros e medidores na unidade, com medição por fase e termografia a cada três meses.`],
+    prec:[`Climatização de precisão · ${u.prec} conjuntos`,`${u.fabPrec}. O inventário não informa a capacidade de cada conjunto.`],
+    carga:['Interior da sala-cofre','Equipamentos de TI fora do escopo. Piso elevado, leito de cabos, vedações e limpeza técnica dos racks entram no subsistema da célula.'],
+    det:['Detecção de incêndio',`${u.deteccao} sistemas de detecção precoce por aspiração, além dos detectores ópticos.`],
+    gas:['Cilindro de gás de combate','O único cilindro listado em todo o inventário está nesta unidade. O plano pede pressão e teste hidrostático a cada três meses.'],
+    noc:['Sala de operação','Parede de 8 monitores e mobiliário técnico, incluídos no plano de manutenção.']
+  }[k];
+  $('#lado').innerHTML = `<h3>${T[0]}</h3><p>${T[1]}</p>${lista(id, KSUB[k])}`;
+}
+function painelFora(id, k){ const f = FORA[k]; $('#lado').innerHTML = `<h3>${f[0]}</h3><span class="tag">No plano, fora do inventário</span><p>${f[1]}</p>${lista(id, f[2])}`; }
+
+// ---------- Interação ----------
+const alvo = {pos:new THREE.Vector3(), tgt:new THREE.Vector3(), ativo:false};
+const VISTA = {u1:{tgt:[1.2,0,-.4], pos:[-1,25.5,28]}, u2:{tgt:[1.0,0,1.0], pos:[-1,23,26]}, duas:{tgt:[9,0,-.7], pos:[9,50,56]}};
+function vai(f){ foco = f; const vz = VISTA[f], c = f==='duas' ? 0 : U[f].cx; alvo.tgt.set(c+vz.tgt[0], vz.tgt[1], vz.tgt[2]); alvo.pos.set(c+vz.pos[0], vz.pos[1], vz.pos[2]); alvo.ativo = true;
+  document.querySelectorAll('[data-foco]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.foco===f)); pinta(); painelGeral(); }
+const raio = new THREE.Raycaster(), ponteiro = new THREE.Vector2(); let baixo = null;
+function acerta(ev){ ponteiro.set(ev.clientX/innerWidth*2-1, -(ev.clientY/innerHeight)*2+1); raio.setFromCamera(ponteiro, camera);
+  const vis = clicaveis.filter(m=>!m.userData.f || lente==='plano'); return raio.intersectObjects(vis, false)[0]?.object; }
+canvas.addEventListener('pointerdown', ev=>{ baixo = [ev.clientX, ev.clientY]; });
+canvas.addEventListener('pointerup', ev=>{ if(!baixo || Math.hypot(ev.clientX-baixo[0], ev.clientY-baixo[1])>5) return; const o = acerta(ev); if(!o) return;
+  const d = o.userData; if(foco!=='duas' && d.id!==foco) vai(d.id);
+  d.f ? painelFora(d.id, d.f) : painelNo(d.id, d.k); });
+canvas.addEventListener('pointermove', ev=>{ canvas.style.cursor = acerta(ev) ? 'pointer' : 'grab'; });
+function defineMes(x){ mes = x; pinta(); painelGeral(); }
+document.addEventListener('click', ev=>{
+  const r = ev.target.closest('rect[data-mes]'); if(r){ const x = +r.dataset.mes; defineMes(mes===x ? 0 : x); return; }
+  const b = ev.target.closest('button'); if(!b) return;
+  if(b.dataset.lente){ lente = b.dataset.lente; document.querySelectorAll('[data-lente]').forEach(x=>x.setAttribute('aria-pressed', x===b)); pinta(); lente==='plano' ? painelFora(foco==='duas'?'u1':foco,'celula') : painelGeral(); }
+  if(b.dataset.foco) vai(b.dataset.foco);
+  if(b.dataset.cal){ nivelar = b.dataset.cal==='niv'; document.querySelectorAll('[data-cal]').forEach(x=>x.setAttribute('aria-pressed', x===b)); pinta(); painelGeral(); }
+});
+$('#mes').addEventListener('input', ev=>defineMes(+ev.target.value));
+
+// ---------- Abertura ----------
+const NUMS = [[UNIDADES.u1.ativos+UNIDADES.u2.ativos,'ativos no inventário'],[ATIVIDADES.length,'atividades no plano'],[H.execucoes,'execuções por ano no plano'],[PADRAO.prazo,'min de atendimento de emergência'],[PADRAO.meses,'meses de contrato']];
+$('#nums').innerHTML = NUMS.map(x=>`<div><b data-v="${x[0]}">${x[0]}</b><span>${x[1]}</span></div>`).join('');
+function desloca(liga){ naAbertura = liga; if(liga && innerWidth>900) camera.setViewOffset(innerWidth, innerHeight, -innerWidth*.29, -innerHeight*.02, innerWidth, innerHeight); else camera.clearViewOffset(); }
+function entra(){ desloca(false); scene.fog.near = 90; scene.fog.far = 220; luzCapa.intensity = 0; document.body.classList.remove('abertura'); $('#capa').classList.add('sai'); controls.autoRotate = false; vai('u1'); }
+$('#entrar').addEventListener('click', entra);
+$('#capaParque').addEventListener('click', ev=>{ ev.preventDefault(); entra(); });
+if(location.hash==='#parque'){ $('#capa').style.transition = 'none'; entra(); }
+else { controls.autoRotate = true; controls.autoRotateSpeed = .22; controls.target.set(-17.5,.5,-1.5); camera.position.set(-33,15,32); desloca(true); scene.fog.near = 60; scene.fog.far = 150; luzCapa.intensity = .5;
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches){ const t0 = performance.now(); (function conta(){ const k = Math.min(1,(performance.now()-t0)/1400), e = 1-Math.pow(1-k,3); document.querySelectorAll('#nums b').forEach(b=>{ b.textContent = Math.round(b.dataset.v*e); }); if(k<1) requestAnimationFrame(conta); })(); } }
+
+// ---------- Laço ----------
+function redimensiona(){ renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth/innerHeight; if(naAbertura) desloca(true); camera.updateProjectionMatrix(); }
+addEventListener('resize', redimensiona); redimensiona();
+const v = new THREE.Vector3(); let antes = performance.now();
+function quadro(){
+  const agora = performance.now(), dt = Math.min((agora-antes)/1000, .1); antes = agora;
+  if(alvo.ativo){ camera.position.lerp(alvo.pos, 1-Math.exp(-dt*3)); controls.target.lerp(alvo.tgt, 1-Math.exp(-dt*4)); if(camera.position.distanceTo(alvo.pos)<.15) alvo.ativo = false; }
+  controls.update();
+  const naCapa = !$('#capa').classList.contains('sai');
+  for(const id of ['u1','u2']){ const s = S[id];
+    for(const k in s.fios){ const f = s.fios[k]; f.pulsos.forEach(p=>{ p.userData.t = (p.userData.t + dt*.16) % 1; f.caminho.getPointAt(p.userData.t, p.position); }); }
+    (s.vent||[]).forEach(x=>{ x.rotation.y += dt*6; });
+  }
+  for(const t of etiquetas){ v.copy(t.pos).project(camera); const fora = naCapa || v.z>1 || (t.fora && lente!=='plano') || (foco==='duas' && !t.p && !(t.fora && lente==='plano')) || (foco!=='duas' && t.id!==foco) || camera.position.distanceTo(t.pos)>130;
+    t.el.style.opacity = fora ? 0 : 1; t.el.style.left = ((v.x+1)/2*innerWidth)+'px'; t.el.style.top = ((1-v.y)/2*innerHeight)+'px'; }
+  composer.render();
+  requestAnimationFrame(quadro);
+}
+painelGeral(); pinta(); quadro();
+</script>
+</body>
+</html>

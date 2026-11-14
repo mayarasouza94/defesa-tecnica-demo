@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defesa técnica - Cliente A - Mobilização</title>
+<link rel="stylesheet" href="tema.css">
+<style>
+/* Só desta tela. Dados de um edital público, anonimizados. Marcos, equipe e atividades vêm de motor.js. */
+.tl-topo{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.tl-topo .rot{margin:0}
+.dia-grande{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.dia-grande small{font-size:13px;color:var(--apoio)}
+.dia-grande b{font-size:44px;line-height:1;letter-spacing:-.03em;color:var(--x);font-weight:600;text-shadow:0 0 28px var(--brilho-x)}
+#linha svg{width:100%}
+#linha text{font-size:14px}
+#linha text.nome{fill:var(--texto);font-weight:600;font-size:14px}
+#linha text.sub{fill:var(--apoio);font-size:12px}
+.cursor{margin-top:2px}
+.cursor input[type=range]{height:30px}
+.vert{list-style:none;margin:14px 0 0;padding:0 0 0 18px;border-left:2px solid var(--linha);gap:12px}
+.vert li{position:relative;font-size:14px}
+.vert li::before{content:"";position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:#0E1215;border:2px solid var(--fraco)}
+.vert li.ok::before{background:var(--x);border-color:var(--x);box-shadow:0 0 10px var(--brilho-x)}
+.vert li b{font-weight:600}
+.vert li small{display:block;color:var(--apoio);font-size:12px}
+.so-estreito{display:none}
+.estado ul{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.estado li{font-size:14px;padding:10px 0;border-top:1px solid var(--linha)}
+.estado li:first-child{border-top:0;padding-top:0}
+.estado li small{display:block;color:var(--apoio);font-size:12px;line-height:1.4;margin-top:1px}
+.estado li.vazio{color:var(--fraco)}
+.estado h3{display:flex;align-items:center;gap:10px}
+.estado h3 i{width:9px;height:9px;border-radius:50%;background:var(--x);box-shadow:0 0 10px var(--brilho-x);display:inline-block}
+.estado.and h3 i{background:var(--y);box-shadow:0 0 10px var(--brilho-y)}
+.estado.eq h3 i{background:var(--ok);box-shadow:0 0 10px rgba(88,211,155,.5)}
+.estado .cont{font-size:12px;color:var(--fraco);margin:0 0 14px;letter-spacing:.06em;text-transform:uppercase}
+.f{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;padding:11px 0;border-top:1px solid var(--linha);align-items:baseline}
+.f:first-of-type{border-top:0;padding-top:0}
+.f .q{font-size:20px;font-weight:600;letter-spacing:-.02em;text-align:right;line-height:1}
+.f .q.fora{font-size:13px;font-weight:400;color:var(--fraco);letter-spacing:0}
+.f .gl{order:2;display:flex;flex-wrap:nowrap;gap:3px;justify-content:flex-end;min-width:40px}
+.f .q{order:3;min-width:34px}
+.f.dorme>span:first-child{color:var(--apoio)}
+.f.tot{grid-template-columns:1fr auto;border-top:1px solid var(--x);margin-top:4px;padding-bottom:0;font-weight:600}
+.f.tot .q{color:var(--x);font-size:24px}
+.pg{position:relative;display:inline-block;width:18px;height:25px}
+.pg svg{position:absolute;inset:0;width:100%;height:100%}
+.pg .fg{fill:var(--x);filter:drop-shadow(0 0 5px rgba(242,169,59,.6))}
+.pg .bg{fill:rgba(154,166,174,.22)}
+.pg.meio .fg{clip-path:inset(0 50% 0 0)}
+.pg.off .fg{display:none}
+/* Bloco 2 */
+.med{display:flex;flex-direction:column;gap:6px;min-height:150px}
+.med .num{font-size:12px;color:var(--fraco);letter-spacing:.06em}
+.med .sobre{font-size:12px}
+.med p{margin:6px 0 0;font-size:16px;line-height:1.5;color:var(--texto)}
+/* Bloco 3 */
+.tot3{display:grid;gap:18px;flex:1;align-content:space-evenly}
+.tot3 div{border-top:1px solid var(--linha);padding-top:14px}
+.tot3 div:first-child{border-top:0;padding-top:0}
+.tot3 span{display:block;font-size:13px;color:var(--apoio)}
+.tot3 b{display:block;font-size:56px;line-height:1.05;letter-spacing:-.03em;font-weight:600}
+.tot3 b.y{color:var(--y);text-shadow:0 0 30px var(--brilho-y)}
+.tot3 b.x{color:var(--x);text-shadow:0 0 30px var(--brilho-x)}
+#graf text{font-size:13px}
+#graf text.v{fill:var(--texto);font-weight:600}
+@media (max-width:760px){
+  .so-estreito{display:grid}
+  #linha{display:none}
+  .dia-grande b{font-size:34px}
+  .med{min-height:0}
+  .tot3 b{font-size:44px}
+}
+</style>
+</head>
+<body>
+<header class="topo">
+  <a class="marca" href="index.html">Defesa técnica · Cliente A</a>
+  <nav class="menu"><a href="proposta.html">A proposta em uma tela</a><a href="index.html#parque">O parque</a><a href="equipe.html">A equipe</a><a href="pracas.html">Praças</a><a href="contrato.html">O contrato</a><a class="ativo" href="mobilizacao.html" aria-current="page">Mobilização</a></nav>
+  <span class="selo">Edital público · dados anonimizados</span>
+</header>
+<main class="pagina">
+
+  <section class="bloco" id="b1">
+    <div class="abre com-fatos">
+      <p class="sobre">1 · Marcos de entrada do contrato</p>
+      <div><div class="num-grande" id="k1"></div><div class="num-rot" id="r1"></div></div>
+      <p class="conclusao" id="f1"></p><div class="fatos" id="fa1"></div>
+    </div>
+    <div class="painel col-12">
+      <div class="tl-topo">
+        <div><h3>Linha do tempo, dia −17 a dia 90</h3><p class="rot">Seis marcos. Entregas, itens em andamento e equipe no posto conforme o dia selecionado.</p></div>
+        <div class="dia-grande"><small>Dia do contrato</small><b id="v-dia"></b></div>
+      </div>
+      <div id="linha"></div>
+      <div class="cursor ctl">
+        <label for="dia"><span>Dia do contrato</span><b id="v-dia2"></b></label>
+        <input type="range" id="dia" min="-17" max="90" step="1" value="0">
+      </div>
+      <ul class="vert so-estreito" id="vert"></ul>
+    </div>
+    <div class="painel col-4 estado estica"><h3><i></i>Já entregue</h3><p class="cont" id="c-ok"></p><ul id="p-ok"></ul></div>
+    <div class="painel col-4 estado and estica"><h3><i></i>Em andamento</h3><p class="cont" id="c-and"></p><ul id="p-and"></ul></div>
+    <div class="painel col-4 estado eq estica"><h3><i></i>No posto</h3><p class="cont" id="c-eq"></p><div id="p-eq"></div></div>
+    <details class="fonte"><summary>Fontes e premissas</summary><p>Prazos e marcos: termo de referência do edital (sessão pública 17 dias antes do fim do contrato vigente; reunião inicial em 5 dias úteis, representados como 7 dias corridos). Sequência de entrada da equipe: premissa da proposta (sobreaviso e engenheiro responsável no dia −10, técnicos no dia 0, apoio de planejamento no dia 7). Quantidades: equipe dimensionada na tela "A proposta em uma tela".</p></details>
+  </section>
+
+  <section class="bloco" id="b2">
+    <div class="abre com-fatos">
+      <p class="sobre">2 · Medições de linha de base na primeira semana</p>
+      <div><div class="num-grande" id="k2"></div><div class="num-rot">medições de linha de base, concluídas em 7 dias</div></div>
+      <p class="conclusao" id="f2"></p><div class="fatos" id="fa2"></div>
+    </div>
+    <div id="medidas" style="display:contents"></div>
+    <details class="fonte"><summary>Fontes e premissas</summary><p>Responsabilidade pela estanqueidade e diagnóstico em até 90 dias: termo de referência. Lista de medições: método da proposta, com uma ou mais medições por subsistema, feitas pela equipe residente na primeira semana e registradas com o engenheiro responsável técnico.</p></details>
+  </section>
+
+  <section class="bloco" id="b3">
+    <div class="abre com-fatos">
+      <p class="sobre">3 · Preventiva nos primeiros 30 e 90 dias</p>
+      <div><div class="num-grande" id="k3"></div><div class="num-rot">execuções nos primeiros 90 dias, em cada unidade</div></div>
+      <p class="conclusao" id="f3"></p><div class="fatos" id="fa3"></div>
+    </div>
+    <div class="painel col-8">
+      <h3>Execuções por subsistema</h3>
+      <p class="rot">Preventivas em 30 e 90 dias, por unidade.</p>
+      <div id="graf"></div>
+      <div class="leg"><span><i style="border-color:#4CC2F1"></i>Primeiros 30 dias</span><span><i style="border-color:#F2A93B"></i>Primeiros 90 dias</span></div>
+    </div>
+    <div class="painel col-4 estica cresce" >
+      <h3>Total de execuções</h3>
+      <p class="rot">Soma de todos os subsistemas.</p>
+      <div class="tot3" id="tot3"></div>
+    </div>
+    <details class="fonte"><summary>Fontes e premissas</summary><p>Frequências: matriz de periodicidade do edital. Contagem: a primeira execução cai no início do ciclo e as seguintes a cada 365 ÷ frequência dias; em uma janela de d dias entram ⌈d × frequência ÷ 365⌉ execuções. O ensaio de estanqueidade é sob demanda e fica fora da contagem; a medição de linha de base da primeira semana vem antes dele.</p></details>
+  </section>
+</main>
+
+<script type="module">
+import { MARCOS, ATIVIDADES, SUBSISTEMAS, equipe } from './motor.js';
+const $ = s => document.querySelector(s);
+const n = (v, d = 0) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const sinal = d => d < 0 ? '−' + n(-d) : n(d);
+const e = equipe();
+const COR = { x: '#F2A93B', y: '#4CC2F1', a: '#FF6F59' };
+
+// Premissa da proposta: dia de entrada de cada função.
+const ENTRADA = {
+  'Técnico de sobreaviso': -10, 'Engenheiro responsável técnico': -10,
+  'Técnico eletrotécnico': 0, 'Técnico de refrigeração': 0, 'Técnico de infraestrutura crítica': 0,
+  'Apoio de planejamento': 7,
+};
+const entradas = e.funcoes.map(f => ({ ...f, entra: ENTRADA[f.funcao] ?? 0 }));
+const D0 = -17, D1 = 90;
+const diaCompleto = Math.max(...entradas.map(f => f.entra));
+
+const pinta = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
+const largura = el => Math.max(300, Math.floor(el.getBoundingClientRect().width) || 300);
+const feitos = new Set();
+const quieto = (id, bloco) => { const r = feitos.has(id) && $(bloco).classList.contains('vis'); feitos.add(id); return r ? ' quieto' : ''; };
+
+const glifo = (cls) => { const f = '<circle cx="10" cy="6.5" r="4.5"/><path d="M2 27v-5.5C2 17.6 5.4 14.5 10 14.5s8 3.1 8 7V27z"/>'; return `<span class="pg${cls}"><svg viewBox="0 0 20 28" aria-hidden="true"><g class="bg">${f}</g><g class="fg">${f}</g></svg></span>`; };
+const glifos = (q, ligado) => { let s = ''; const off = ligado ? '' : ' off'; for (let i = 0; i < Math.floor(q + 1e-9); i++) s += glifo(off); if (q - Math.floor(q + 1e-9) > .01) s += glifo(' meio' + off); return s; };
+
+$('#k1').textContent = n(diaCompleto);
+$('#r1').textContent = 'dia do contrato com a equipe completa';
+$('#f1').innerHTML = `Entre a sessão pública e o fim do contrato vigente há <b>17 dias</b>. Atendimento de emergência, com técnico no local em até 60 minutos, desde a assinatura. <u>Pela sequência de entrada da proposta, a equipe de ${n(e.total, 1)} pessoas está completa no dia 7.</u>`;
+$('#fa1').innerHTML = `<div><span>Dias da sessão pública à assinatura</span><b class="y">${n(-MARCOS[0].dia)}</b></div><div><span>Pessoas na equipe dimensionada</span><b class="x">${n(e.total, 1)}</b></div><div><span>Marcos até o dia ${n(D1)}</span><b>${n(MARCOS.length)}</b></div>`;
+
+// Linha do tempo em SVG, na largura real do contêiner.
+let diaAtual = 0, primeira = true;
+function rotuloCurto(m) {
+  return ({ 'Sessão pública': 'Sessão pública', 'Assinatura e início do serviço mensal': 'Assinatura', 'Reunião inicial e plano de execução': 'Reunião inicial', 'Levantamento situacional': 'Levantamento', 'Inspeção inicial completa': 'Inspeção inicial', 'Diagnóstico de conformidade da sala': 'Diagnóstico' })[m.nome] || m.nome;
+}
+function desenhaLinha(dia) {
+  const alvo = $('#linha');
+  const W = largura(alvo), H = 270, X0 = 70, X1 = W - 70, Y = 140;
+  const x = d => X0 + (d - D0) / (D1 - D0) * (X1 - X0);
+  const q = primeira ? '' : ' quieto'; primeira = false;
+  const nos = MARCOS.map((m, i) => ({ m, cima: i % 2 === 0 }));
+  let s = `<svg class="${q.trim()}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Linha do tempo do dia −17 ao dia 90">`;
+  s += `<defs><linearGradient id="gTr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B97A1C"/><stop offset="1" stop-color="${COR.x}"/></linearGradient>
+  <pattern id="hach" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="rgba(76,194,241,.10)"/><line x1="0" y1="0" x2="0" y2="8" stroke="rgba(76,194,241,.32)" stroke-width="2"/></pattern></defs>`;
+  // Zona antes da assinatura.
+  s += `<rect x="${x(D0)}" y="${Y - 24}" width="${x(0) - x(D0)}" height="48" rx="8" fill="url(#hach)" stroke="${COR.y}" stroke-opacity=".35"/>`;
+  s += `<text x="${(x(D0) + x(0)) / 2}" y="${Y - 32}" text-anchor="middle" style="fill:${COR.y};font-size:12px;letter-spacing:.06em">ANTES DA ASSINATURA</text>`;
+  // Trilho: base, grade de dias e trecho percorrido.
+  s += `<line x1="${X0}" x2="${X1}" y1="${Y}" y2="${Y}" stroke="#242B30" stroke-width="10" stroke-linecap="round"/>`;
+  for (let d = 10; d < D1; d += 10) s += `<line class="grade" x1="${x(d)}" x2="${x(d)}" y1="${Y + 9}" y2="${Y + 15}"/>`;
+  s += `<line class="glow-x" x1="${X0}" x2="${x(dia)}" y1="${Y}" y2="${Y}" stroke="url(#gTr)" stroke-width="10" stroke-linecap="round"/>`;
+  // Entrada de pessoas antes da assinatura.
+  for (const f of entradas) if (f.entra < 0) s += `<line x1="${x(f.entra)}" y1="${Y + 14}" x2="${x(f.entra)}" y2="${Y + 24}" stroke="${COR.y}" stroke-width="2"/>`;
+  s += `<text class="sub anim-surge" x="${x(-10)}" y="${Y + 40}" text-anchor="middle" style="fill:${COR.y}">sobreaviso e engenheiro</text>`;
+  // Marcos.
+  nos.forEach(({ m, cima }, i) => {
+    const cx = x(m.dia), anc = m.dia === D1 ? 'end' : 'middle', on = m.dia <= dia;
+    const ax = anc === 'end' ? cx + 14 : cx;
+    const y1 = cima ? 78 : Y + 60;
+    s += `<line x1="${cx}" x2="${cx}" y1="${Y}" y2="${cima ? y1 + 8 : y1 - 8}" stroke="${on ? COR.x : '#3A434A'}" stroke-opacity="${on ? .6 : 1}"/>`;
+    s += `<g class="anim-surge" style="animation-delay:${.15 + i * .08}s"><circle cx="${cx}" cy="${Y}" r="16" fill="${on ? COR.x : 'none'}" opacity=".14"/><circle class="${on ? 'glow-x' : ''}" cx="${cx}" cy="${Y}" r="9" fill="${on ? COR.x : '#0E1215'}" stroke="${on ? '#FFE2B0' : '#5F6B73'}" stroke-width="2.5"/></g>`;
+    const ty = cima ? 46 : Y + 90;
+    s += `<text class="nome" x="${ax}" y="${ty}" text-anchor="${anc}">${esc(rotuloCurto(m))}</text><text class="sub" x="${ax}" y="${ty + 18}" text-anchor="${anc}">dia ${sinal(m.dia)}</text>`;
+  });
+  // Cursor.
+  const cx = x(dia);
+  s += `<g><line x1="${cx}" x2="${cx}" y1="${Y - 30}" y2="${Y + 30}" stroke="#FFE2B0" stroke-width="2" stroke-opacity=".9"/><circle class="glow-x" cx="${cx}" cy="${Y}" r="6" fill="#FFE2B0"/><polygon points="${cx - 7},${Y - 36} ${cx + 7},${Y - 36} ${cx},${Y - 26}" fill="#FFE2B0"/></g>`;
+  s += `</svg>`;
+  alvo.innerHTML = s;
+}
+
+function atualiza(dia) {
+  diaAtual = dia;
+  const txt = dia < 0 ? 'antes da assinatura' : dia === 0 ? 'dia da assinatura' : `${n(Math.max(0, D1 - dia))} ${D1 - dia === 1 ? 'dia' : 'dias'} até o diagnóstico`;
+  $('#v-dia').textContent = dia < 0 ? sinal(dia) : n(dia);
+  $('#v-dia2').textContent = txt;
+  pinta($('#dia'));
+  desenhaLinha(dia);
+  const fts = MARCOS.filter(m => m.dia <= dia);
+  const proximos = MARCOS.filter(m => m.dia > dia);
+  $('#p-ok').innerHTML = fts.length ? fts.map(m => `<li><b>${esc(m.nome)}</b><small>dia ${sinal(m.dia)} · ${esc(m.nota)}</small></li>`).join('') : '<li class="vazio">Nenhum marco entregue.</li>';
+  $('#c-ok').textContent = `${n(fts.length)} de ${n(MARCOS.length)} marcos`;
+  const prox = proximos[0];
+  const servico = dia >= 0 ? `<li><b>Serviço mensal e emergência</b><small>desde a assinatura; técnico no local em até 60 minutos</small></li>` : '';
+  const estan = dia >= 0 && dia < 90 ? `<li><b>Responsabilidade pela estanqueidade</b><small>desde a assinatura; diagnóstico no dia 90</small></li>` : '';
+  const alvo = prox ? `<li><b>${esc(prox.nome)}</b><small>em ${n(prox.dia - dia)} ${prox.dia - dia === 1 ? 'dia' : 'dias'}, no dia ${sinal(prox.dia)}</small></li>` : '';
+  const and = servico + estan + alvo;
+  $('#p-and').innerHTML = and || '<li class="vazio">Sem itens em andamento.</li>';
+  $('#c-and').textContent = prox ? `próximo marco: dia ${sinal(prox.dia)}` : 'todos os marcos entregues';
+  const no = entradas.filter(f => f.entra <= dia);
+  const soma = no.reduce((t, f) => t + f.qtd, 0);
+  $('#p-eq').innerHTML = entradas.map(f => { const lig = f.entra <= dia; return `<div class="f${lig ? '' : ' dorme'}"><span>${esc(f.funcao)}</span>${lig ? `<span class="q">${n(f.qtd, f.qtd % 1 ? 1 : 0)}</span>` : `<span class="q fora">entra no dia ${sinal(f.entra)}</span>`}<span class="gl" aria-hidden="true">${glifos(f.qtd, lig)}</span></div>`; }).join('')
+    + `<div class="f tot"><span>Total no posto</span><span class="q">${n(soma, soma % 1 ? 1 : 0)} de ${n(e.total, 1)}</span></div>`;
+  $('#c-eq').textContent = 'um ícone por pessoa';
+  $('#vert').innerHTML = MARCOS.map(m => `<li class="${m.dia <= dia ? 'ok' : ''}"><b>Dia ${sinal(m.dia)} · ${esc(m.nome)}</b><small>${esc(m.nota)}</small></li>`).join('');
+}
+$('#dia').addEventListener('input', ev => atualiza(+ev.target.value));
+
+// Bloco 2.
+const MEDIDAS = [
+  ['Energia', 'Capacidade e impedância dos bancos de baterias', 'Define a autonomia recebida pelo contrato.'],
+  ['Célula da sala-cofre', 'Ensaio de estanqueidade', 'Resultado registrado antes de qualquer intervenção.'],
+  ['Incêndio', 'Pesagem dos cilindros de gás', 'Fixa a carga de entrada.'],
+  ['Energia', 'Termografia dos quadros elétricos', 'Pontos quentes de cada quadro registrados na primeira semana.'],
+  ['Energia', 'Carga e horas de operação dos geradores', 'Leitura no horímetro.'],
+  ['Climatização', 'Vazão e temperatura da climatização de precisão', 'Medidas em cada unidade.'],
+];
+$('#k2').textContent = n(MEDIDAS.length);
+$('#f2').innerHTML = `A responsabilidade pela estanqueidade começa na assinatura; o diagnóstico de conformidade sai no dia 90. <u>As medições da primeira semana registram a condição de recebimento de cada sistema, antes de qualquer intervenção da contratada.</u>`;
+$('#fa2').innerHTML = `<div><span>Medições de energia</span><b class="x">${n(MEDIDAS.filter(m => m[0] === 'Energia').length)}</b></div><div><span>Subsistemas medidos</span><b class="y">${n(new Set(MEDIDAS.map(m => m[0])).size)}</b></div><div><span>Prazo para todas</span><b>7 dias</b></div>`;
+$('#medidas').innerHTML = MEDIDAS.map(([k, t, d]) => `<div class="painel col-4 med"><p class="sobre">${esc(k)}</p><span class="num">${esc(t)}</span><p>${esc(d)}</p></div>`).join('');
+
+// Bloco 3.
+const cont = d => Object.keys(SUBSISTEMAS).map(k => {
+  const as = ATIVIDADES.filter(a => a.sub === k && a.freq > 0);
+  return { k, nome: SUBSISTEMAS[k], v: as.reduce((s, a) => s + Math.ceil(d * a.freq / 365 - 1e-9), 0) };
+});
+const c30 = cont(30), c90 = cont(90);
+const t30 = c30.reduce((s, c) => s + c.v, 0), t90 = c90.reduce((s, c) => s + c.v, 0);
+const mensais = ATIVIDADES.filter(a => a.freq === 12).length;
+$('#k3').textContent = n(t90);
+$('#f3').innerHTML = `<b>${n(t30)} execuções nos primeiros 30 dias e ${n(t90)} nos primeiros 90</b>, em cada unidade. As ${n(mensais)} atividades mensais têm ao menos uma execução antes da inspeção inicial do dia 30.`;
+$('#fa3').innerHTML = `<div><span>Primeiros 30 dias</span><b class="y">${n(t30)}</b></div><div><span>Primeiros 90 dias</span><b class="x">${n(t90)}</b></div><div><span>Atividades mensais</span><b>${n(mensais)}</b></div>`;
+$('#tot3').innerHTML = `<div><span>Primeiros 30 dias</span><b class="y">${n(t30)}</b></div><div><span>Primeiros 90 dias</span><b class="x">${n(t90)}</b></div>`;
+const ordem = c90.slice().sort((a, b) => b.v - a.v);
+const teto = Math.max(...c90.map(c => c.v));
+function desenhaGraf() {
+  const W = largura($('#graf')), mob = W < 560;
+  const LX = mob ? 0 : Math.min(260, W * .3), LW = W - LX - 48, RH = mob ? 76 : 64, H = ordem.length * RH + 24;
+  const q = quieto('graf', '#b3');
+  let g = `<svg class="${q.trim()}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Execuções de preventiva nos primeiros 30 e 90 dias, por subsistema">
+  <defs><linearGradient id="gB30" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2A7898"/><stop offset="1" stop-color="${COR.y}"/></linearGradient><linearGradient id="gB90" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B97A1C"/><stop offset="1" stop-color="${COR.x}"/></linearGradient></defs>`;
+  for (let k = 0; k <= 4; k++) { const gx = LX + LW * k / 4; g += `<line class="grade" x1="${gx}" x2="${gx}" y1="0" y2="${H - 18}"/><text x="${gx}" y="${H - 2}" text-anchor="middle">${n(Math.round(teto * k / 4))}</text>`; }
+  ordem.forEach((c, i) => {
+    const y = i * RH + 6, a30 = c30.find(z => z.k === c.k).v, by = mob ? y + 22 : y + 8;
+    g += mob ? `<text x="0" y="${y + 12}">${esc(c.nome)}</text>` : `<text x="0" y="${y + 30}">${esc(c.nome)}</text>`;
+    g += `<rect class="anim-barra glow-y" style="--i:${i}" x="${LX}" y="${by}" width="${Math.max(3, a30 / teto * LW)}" height="14" fill="url(#gB30)" rx="3"/>`;
+    g += `<rect class="anim-barra glow-x" style="--i:${i}" x="${LX}" y="${by + 20}" width="${Math.max(3, c.v / teto * LW)}" height="14" fill="url(#gB90)" rx="3"/>`;
+    g += `<text class="v anim-surge" x="${LX + a30 / teto * LW + 8}" y="${by + 12}">${n(a30)}</text><text class="v anim-surge" x="${LX + c.v / teto * LW + 8}" y="${by + 32}" style="fill:${COR.x}">${n(c.v)}</text>`;
+  });
+  g += `</svg>`;
+  $('#graf').innerHTML = g;
+}
+
+// Mostra os blocos ao entrar na tela, para a entrada animada rodar uma vez.
+const blocos = document.querySelectorAll('.bloco');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('vis'); io.unobserve(en.target); } }), { threshold: .12 });
+  blocos.forEach(b => io.observe(b));
+} else blocos.forEach(b => b.classList.add('vis'));
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { desenhaLinha(diaAtual); desenhaGraf(); }, 150); });
+
+atualiza(0);
+desenhaGraf();
+</script>
+</body>
+</html>

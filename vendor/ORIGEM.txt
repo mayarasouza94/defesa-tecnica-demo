@@ -1,0 +1,1 @@
+three 0.185.1 (MIT). Arquivos: three.module.min.js, three.core.min.js, OrbitControls.js e os modulos em jsm/ (postprocessing, shaders, environments, objects), copiados do pacote npm three@0.185.1 sem alteracao.

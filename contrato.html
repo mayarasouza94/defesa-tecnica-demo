@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defesa técnica - Cliente A - O contrato</title>
+<link rel="stylesheet" href="tema.css">
+<style>
+/* Só desta tela. O contrato: itens pagos à parte em 60 meses. Dados de um edital público, anonimizados. Todo número vem de motor.js. */
+.dica{display:block;color:var(--fraco);font-size:12px;margin-top:2px;line-height:1.35}
+.ctl .restaura{margin-top:2px}
+.faixa-leg{grid-column:span 12;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 28px;margin-top:-4px}
+.faixa-leg .rot{margin:0}.faixa-leg .leg{margin:0}
+.leg i.pt{width:11px;height:11px;border:0;border-radius:50%;margin-right:8px;vertical-align:-1px;background:var(--x);box-shadow:0 0 8px var(--brilho-x)}
+.leg i.jn{width:20px;height:10px;border:0;border-radius:3px;margin-right:8px;vertical-align:-1px;background:rgba(76,194,241,.32);box-shadow:inset 0 0 0 1px rgba(76,194,241,.5)}
+.leg i.cy{width:12px;height:12px;border:0;border-radius:3px;margin-right:8px;vertical-align:-2px;background:var(--y)}
+.leg i.co{width:12px;height:12px;border:0;border-radius:3px;margin-right:8px;vertical-align:-2px;background:var(--achado);box-shadow:0 0 8px rgba(255,111,89,.6)}
+.leg i.tr{width:0;height:12px;border-top:0;border-left:2px dashed var(--texto);border-radius:0;margin-right:8px;vertical-align:-2px}
+/* Bloco 2: comparação frente a frente */
+.vs{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);gap:0 28px;align-items:stretch}
+.vs .sep{background:linear-gradient(180deg,transparent,var(--linha) 12%,var(--linha) 88%,transparent)}
+.lado .rot-l{font-size:13px;color:var(--apoio);min-height:2.7em;line-height:1.35}
+.lado .grande{font-size:clamp(52px,5.6vw,80px);line-height:1;font-weight:600;letter-spacing:-.04em;color:var(--y);text-shadow:0 0 36px var(--brilho-y);margin:10px 0 6px}
+.lado .grande.ruim{color:var(--achado);text-shadow:0 0 36px rgba(255,111,89,.5)}
+.lado small{display:block;color:var(--apoio);font-size:13px;min-height:2.7em}
+.med{margin-top:22px}
+.med-t{font-size:12px;color:var(--fraco);letter-spacing:.06em;text-transform:uppercase;margin-bottom:26px;display:flex;justify-content:space-between;gap:8px}
+.med-t b{color:var(--texto);font-weight:600;letter-spacing:0;text-transform:none;font-size:13px}
+.trilho-m{position:relative;height:14px;border-radius:7px;background:rgba(154,166,174,.12);box-shadow:inset 0 0 0 1px rgba(154,166,174,.1)}
+.trilho-m span{position:absolute;top:0;bottom:0;border-radius:7px}
+.trilho-m .dentro{left:0;background:linear-gradient(90deg,#2A7898,var(--y));box-shadow:0 0 14px var(--brilho-y)}
+.trilho-m .fora{background:linear-gradient(90deg,#C8452F,var(--achado));box-shadow:0 0 14px rgba(255,111,89,.55);border-radius:0 7px 7px 0}
+.trilho-m em{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--texto);border-radius:1px}
+.trilho-m em::before{content:attr(data-r);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:4px;font-style:normal;font-size:11px;color:var(--texto);white-space:nowrap}
+.med-e{display:flex;justify-content:space-between;font-size:11px;color:var(--fraco);margin-top:6px}
+/* Bloco 3 */
+.tres{margin:0;font-size:15px;color:var(--texto)}
+.tres b{display:block;font-size:17px;font-weight:600;color:var(--x);margin-bottom:6px;letter-spacing:-.01em}
+.painel.tx{border-top:2px solid var(--x)}
+@media (max-width:1100px){.faixa-leg{margin-top:0}}
+@media (max-width:820px){
+  .vs{grid-template-columns:1fr;gap:24px 0}.vs .sep{height:1px;background:var(--linha)}
+  .lado .rot-l,.lado small{min-height:0}
+}
+</style>
+</head>
+<body>
+<header class="topo">
+  <a class="marca" href="index.html">Defesa técnica · Cliente A</a>
+  <nav class="menu"><a href="proposta.html">A proposta em uma tela</a><a href="index.html#parque">O parque</a><a href="equipe.html">A equipe</a><a href="pracas.html">Praças</a><a class="ativo" href="contrato.html">O contrato</a><a href="mobilizacao.html">Mobilização</a></nav>
+  <span class="selo">Edital público · dados anonimizados</span>
+</header>
+<main class="pagina">
+
+  <section class="bloco" id="b1">
+    <div class="abre com-fatos">
+      <p class="sobre">1 · Itens sob demanda: quantidade prevista em 60 meses</p>
+      <div><div class="num-grande" id="k1"></div><div class="num-rot" id="kr1">dos cenários excedem as unidades pagas, nas baterias</div></div>
+      <p class="conclusao" id="f1">Calculando os cenários.</p><div class="fatos" id="fa1"></div>
+    </div>
+    <div class="painel col-6">
+      <h3>Trocas de banco de baterias</h3>
+      <p class="rot res" id="r-bat"></p>
+      <div id="h-bat"></div>
+    </div>
+    <div class="painel col-6">
+      <h3>Recargas de gás do sistema de extinção</h3>
+      <p class="rot res" id="r-gas"></p>
+      <div id="h-gas"></div>
+    </div>
+    <div class="faixa-leg">
+      <p class="rot">Quantidade de eventos em 60 meses, em 10 mil cenários. <span id="rot-pagas"></span></p>
+      <div class="leg"><span><i class="cy"></i>Dentro das unidades pagas</span><span><i class="co"></i>Acima das unidades pagas</span><span><i class="tr"></i>Limite das pagas</span></div>
+    </div>
+    <details class="fonte"><summary>Fontes e premissas</summary>
+      <p>Dado do edital: 4 recargas de gás e 4 substituições de banco de baterias, pagas sob demanda em 60 meses. O estudo técnico descreve o quantitativo como estimativa referencial, sem limite máximo de execução.</p>
+      <p>Premissa ajustável: vida útil do banco de 30 a 36 meses e uma descarga de gás por ambiente a cada 30 a 36 meses, faixas do estudo técnico. Quatro bancos, um por UPS, conforme o inventário.</p>
+      <p>Método: simulação de Monte Carlo com 10 mil cenários de 60 meses; idade inicial e vida de cada banco sorteadas em distribuição triangular; descargas de gás por processo de Poisson em cada ambiente.</p>
+    </details>
+  </section>
+
+  <section class="bloco" id="b2">
+    <div class="abre com-fatos">
+      <p class="sobre">2 · Bancos de baterias: estudo técnico e inventário</p>
+      <div><div class="num-grande" id="k2"></div><div class="num-rot" id="kr2">trocas em média, com a contagem selecionada</div></div>
+      <p class="conclusao" id="f2"></p><div class="fatos" id="fa2"></div>
+    </div>
+    <aside class="painel col-4 fixo">
+      <h3>Premissas</h3>
+      <p class="rot">Três premissas ajustáveis; a comparação é recalculada a cada alteração.</p>
+      <div class="ctl">
+        <div><label for="s-ban">Bancos de baterias <b id="v-ban"></b></label><input type="range" id="s-ban" min="2" max="6" step="1"><small class="dica">Estudo técnico: 2 bancos. Inventário: 4 UPS.</small></div>
+        <div><label for="s-vid">Vida útil provável do banco <b id="v-vid"></b></label><input type="range" id="s-vid" min="24" max="60" step="1"><small class="dica">Faixa do estudo técnico: 30 a 36 meses.</small></div>
+        <div><label for="s-int">Intervalo provável entre descargas de gás <b id="v-int"></b></label><input type="range" id="s-int" min="24" max="60" step="1"><small class="dica">Faixa do estudo técnico: 30 a 36 meses.</small></div>
+        <button class="restaura" id="restaura">Restaurar premissas</button>
+      </div>
+    </aside>
+    <div class="painel col-8">
+      <h3>Estudo técnico (2 bancos) e inventário</h3>
+      <p class="rot">Percentual de cenários acima das unidades pagas e média de trocas, em relação ao limite pago.</p>
+      <div class="vs">
+        <div class="lado"><div class="rot-l">Baterias, 2 bancos (estudo técnico)</div><div class="grande" id="g-dois"></div><small id="s-dois"></small><div class="med" id="m-dois"></div></div>
+        <div class="sep"></div>
+        <div class="lado"><div class="rot-l" id="rot-atual"></div><div class="grande" id="g-atual"></div><small id="s-atual"></small><div class="med" id="m-atual"></div></div>
+      </div>
+    </div>
+    <details class="fonte"><summary>Fontes e premissas</summary>
+      <p>Dado do edital: o inventário de ativos lista duas UPS por unidade, ou quatro bancos de baterias; o estudo técnico considera um banco por ambiente, ou dois bancos.</p>
+      <p>Premissa ajustável: número de bancos, vida útil e intervalo entre descargas. A faixa de sorteio é de 90% a 110% do valor selecionado.</p>
+      <p>Método: a mesma simulação do bloco 1, repetida com 2 bancos e as demais premissas iguais.</p>
+    </details>
+  </section>
+
+  <section class="bloco" id="b3">
+    <div class="abre com-fatos">
+      <p class="sobre">3 · Critério de substituição e calendário previsto</p>
+      <div><div class="num-grande" id="k3"></div><div class="num-rot">trocas previstas no calendário de 60 meses</div></div>
+      <p class="conclusao" id="f3"></p><div class="fatos" id="fa3"></div>
+    </div>
+    <div class="painel col-12">
+      <h3>Calendário esperado de trocas, por banco</h3>
+      <p class="rot">A data de cada troca é definida por ensaio; o calendário é reajustado a cada medição.</p>
+      <div id="tempo"></div>
+      <div class="leg"><span><i class="pt"></i>Troca prevista</span><span><i class="jn"></i>Janela de 10% em torno da vida provável</span><span><i class="tr"></i>Fim dos 60 meses</span></div>
+    </div>
+    <div class="painel tx col-4"><p class="tres"><b>Medição de linha de base.</b> Capacidade e impedância de cada banco, medidas nos primeiros dias do contrato.</p></div>
+    <div class="painel tx col-4"><p class="tres"><b>Pesagem dos cilindros na entrada.</b> Peso de cada cilindro registrado na entrada, como referência para as recargas.</p></div>
+    <div class="painel tx col-4"><p class="tres"><b>Critério de troca por ensaio.</b> Capacidade abaixo de 80% da nominal, impedância 25% acima da referência ou autonomia abaixo de 15 min em carga plena.</p></div>
+    <details class="fonte"><summary>Fontes e premissas</summary>
+      <p>Dado do edital: critério de troca por ensaio do estudo técnico (80% da capacidade nominal, 25% de impedância acima da referência, 15 min de autonomia em carga plena).</p>
+      <p>Premissa ajustável: vida útil provável e número de bancos, os mesmos do bloco 2. As idades dos bancos são distribuídas uniformemente ao longo de uma vida útil.</p>
+      <p>Método: calendário esperado a partir da vida provável. A data de cada troca é definida por ensaio; o calendário é reajustado a cada medição.</p>
+    </details>
+  </section>
+</main>
+
+<script type="module">
+import { PADRAO, sobDemanda } from './motor.js';
+const $ = s => document.querySelector(s);
+const n = (v, d = 0) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pc = v => n(v * 100) + '%';
+const faixa = v => [v * 0.9, v, v * 1.1];
+const COR = { x: '#F2A93B', y: '#4CC2F1', a: '#FF6F59' };
+let P = structuredClone(PADRAO), ult = null;
+const ROT = Array.from({ length: 13 }, (_, i) => i === 12 ? '12+' : String(i));
+
+// Entrada animada uma vez: só o primeiro desenho anima; depois do bloco visto, redesenho é imediato.
+const feitos = new Set();
+const quieto = (id, bloco) => { const r = feitos.has(id) && $(bloco).classList.contains('vis'); feitos.add(id); return r ? ' quieto' : ''; };
+const largura = el => Math.max(300, Math.floor(el.getBoundingClientRect().width) || 300);
+const pinta = e => e.style.setProperty('--p', ((e.value - e.min) / (e.max - e.min) * 100) + '%');
+
+function hist(id, o, pagas) {
+  const el = $(id), W = largura(el), mob = W < 520, H = mob ? 250 : 320;
+  const x0 = 38, x1 = W - 6, y0 = 52, y1 = H - 30, N = o.dist.length, passo = (x1 - x0) / N, larg = passo * .72;
+  const pico = Math.max(...o.dist), Y = v => y1 - v / pico * (y1 - y0);
+  const q = quieto(id, '#b1').trim();
+  const gid = id.slice(1);
+  const grade = [0, .25, .5, .75, 1].map(f => `<line class="grade" x1="${x0}" x2="${x1}" y1="${Y(pico * f)}" y2="${Y(pico * f)}"/><text x="${x0 - 8}" y="${Y(pico * f) + 4}" text-anchor="end">${n(pico * f * 100)}%</text>`).join('');
+  const xl = x0 + passo * (pagas + 1);
+  const fundo = `<rect class="anim-surge" x="${xl}" y="${y0 - 14}" width="${x1 - xl}" height="${y1 - y0 + 14}" fill="${COR.a}" fill-opacity=".07"/>`;
+  const cols = o.dist.map((v, i) => {
+    const fora = i > pagas, cx = x0 + passo * (i + .5), top = Y(v), h = Math.max(1, y1 - top);
+    const rot = !mob && passo >= 40 && v / pico > .12 ? `<text class="anim-surge" x="${cx.toFixed(1)}" y="${(top - 7).toFixed(1)}" text-anchor="middle" style="font-size:11px${fora ? ';fill:' + COR.a : ''}">${n(v * 100, 1)}%</text>` : '';
+    return `<g><title>${ROT[i]} eventos: ${n(v * 100, 1)}% dos cenários</title><rect class="anim-coluna ${fora ? 'glow-a' : ''}" style="--i:${i}" x="${(cx - larg / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${larg.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="url(#${gid}${fora ? 'F' : 'D'})" stroke="${fora ? COR.a : COR.y}" stroke-opacity="${fora ? .9 : .55}"/>${rot}<text x="${cx.toFixed(1)}" y="${y1 + 18}" text-anchor="middle">${ROT[i]}</text></g>`;
+  }).join('');
+  const lado = xl - 8 > x0 + 90;
+  el.innerHTML = `<svg class="${q}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Distribuição do número de eventos em 60 meses">
+    <defs><linearGradient id="${gid}D" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COR.y}" stop-opacity=".62"/><stop offset="1" stop-color="${COR.y}" stop-opacity=".1"/></linearGradient>
+    <linearGradient id="${gid}F" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COR.a}" stop-opacity=".95"/><stop offset="1" stop-color="${COR.a}" stop-opacity=".25"/></linearGradient></defs>
+    ${grade}${fundo}${cols}
+    <line x1="${xl}" x2="${xl}" y1="${y0 - 14}" y2="${y1}" stroke="#EEF1F3" stroke-width="1.6" stroke-dasharray="5 4"/>
+    ${lado ? `<text x="${xl - 8}" y="${y0 - 22}" text-anchor="end" class="rotulo-forte">até ${pagas} pagas</text>` : ''}
+    <text x="${xl + 8}" y="${y0 - 22}" style="fill:${COR.a}">acima das pagas</text></svg>`;
+}
+
+function medidor(media, esc, pagas) {
+  const w = v => (Math.min(v, esc) / esc * 100).toFixed(2);
+  const dentro = Math.min(media, pagas);
+  return `<div class="med-t"><span>Média de trocas e limite pago</span><b>${n(media, 1)}</b></div>
+    <div class="trilho-m"><span class="dentro anim-barra" style="width:${w(dentro)}%"></span>${media > pagas ? `<span class="fora anim-barra" style="left:${w(pagas)}%;width:${(w(media) - w(pagas)).toFixed(2)}%"></span>` : ''}<em data-r="${pagas} pagas" style="left:${w(pagas)}%"></em></div>
+    <div class="med-e"><span>0</span><span>${n(esc)}</span></div>`;
+}
+
+function tempo() {
+  const el = $('#tempo'), W = largura(el), mob = W < 560;
+  const v = P.vidaBateria[1], B = P.bancos, M = P.meses, lh = mob ? 38 : 48, xa = mob ? 56 : 78, xb = W - 14, y0 = 8, H = y0 + B * lh + 34;
+  const X = t => xa + t / M * (xb - xa), q = quieto('tempo', '#b3').trim();
+  let total = 0, linhas = '', pontos = '';
+  for (let b = 0; b < B; b++) {
+    const cy = y0 + b * lh + lh / 2;
+    linhas += `<rect x="${xa}" y="${y0 + b * lh + 3}" width="${xb - xa}" height="${lh - 6}" rx="6" fill="rgba(154,166,174,${b % 2 ? .03 : .07})"/><text x="0" y="${cy + 4}">${mob ? 'B' + (b + 1) : 'Banco ' + (b + 1)}</text>`;
+    for (let t = v * (b + 1) / B; t <= M + 1e-9; t += v) {
+      total++;
+      const jw = v * .2 / M * (xb - xa);
+      pontos += `<rect class="anim-surge" x="${(X(t) - jw / 2).toFixed(1)}" y="${cy - 9}" width="${jw.toFixed(1)}" height="18" rx="9" fill="${COR.y}" fill-opacity=".26" stroke="${COR.y}" stroke-opacity=".5"/>`
+        + `<circle class="anim-surge glow-x" cx="${X(t).toFixed(1)}" cy="${cy}" r="6" fill="#FFE2B0" stroke="${COR.x}" stroke-width="2.5"><title>Banco ${b + 1}, mês ${n(t, 0)}</title></circle>`;
+    }
+  }
+  const marcas = [0, 12, 24, 36, 48, 60];
+  const yb = y0 + B * lh;
+  const grade = marcas.map(m => `<line class="grade" x1="${X(m)}" x2="${X(m)}" y1="${y0}" y2="${yb + 5}"/><text x="${X(m)}" y="${yb + 20}" text-anchor="${m === 60 ? 'end' : m === 0 ? 'start' : 'middle'}">${m === 0 ? 'mês 0' : m}</text>`).join('');
+  el.innerHTML = `<svg class="${q}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Trocas previstas por banco ao longo de ${M} meses">
+    ${linhas}${grade}${pontos}
+    <line x1="${X(M)}" x2="${X(M)}" y1="${y0 - 4}" y2="${yb}" stroke="#EEF1F3" stroke-width="1.6" stroke-dasharray="5 4"/></svg>`;
+  return total;
+}
+
+function desenha(S, S2) {
+  ult = [S, S2];
+  const b = S.baterias, g = S.gas, pg = S.pagas, d = S2.baterias;
+  $('#k1').innerHTML = `${n(b.acima * 100)}<span class="un">%</span>`;
+  $('#kr1').textContent = `dos cenários de baterias excedem as ${pg} unidades pagas`;
+  $('#f1').innerHTML = `Com ${n(P.bancos)} bancos de baterias, as trocas excedem as ${pg} pagas em <b>${pc(b.acima)} dos cenários</b>, com média de ${n(b.media, 1)} em ${S.meses} meses. Recargas de gás: excedem em ${pc(g.acima)}, com média de ${n(g.media, 1)}.`;
+  $('#fa1').innerHTML = `<div><span>Baterias, média de trocas</span><b class="y">${n(b.media, 1)}</b></div><div><span>Gás, média de recargas</span><b class="x">${n(g.media, 1)}</b></div><div><span>Gás acima das ${pg} pagas</span><b>${pc(g.acima)}</b></div>`;
+  $('#r-bat').innerHTML = `Média <b>${n(b.media, 1)}</b> · acima de ${pg} em <b>${pc(b.acima)}</b>`;
+  $('#r-gas').innerHTML = `Média <b>${n(g.media, 1)}</b> · acima de ${pg} em <b>${pc(g.acima)}</b>`;
+  $('#rot-pagas').textContent = `Linha tracejada: limite de ${pg} unidades pagas`;
+  hist('#h-bat', b, pg); hist('#h-gas', g, pg);
+
+  $('#k2').innerHTML = `${n(b.media, 1)}<span class="un">trocas</span>`;
+  $('#kr2').textContent = `em média, com ${n(P.bancos)} ${P.bancos > 1 ? 'bancos' : 'banco'}`;
+  $('#f2').innerHTML = P.bancos === 2
+    ? `Estudo técnico, com 2 bancos: média de <b>${n(d.media, 1)}</b> trocas, acima de ${pg} em ${pc(d.acima)} dos cenários. O quantitativo pago corresponde a essa contagem.`
+    : `Estudo técnico, com 2 bancos: média de <b>${n(d.media, 1)}</b> trocas, contra ${pg} pagas. Inventário, com ${n(P.bancos)} bancos: média de <u>${n(b.media, 1)}</u> trocas.`;
+  $('#fa2').innerHTML = `<div><span>Média com 2 bancos</span><b class="y">${n(d.media, 1)}</b></div><div><span>Acima das ${pg}, com 2 bancos</span><b>${pc(d.acima)}</b></div><div><span>Acima das ${pg}, com ${n(P.bancos)}</span><b class="x">${pc(b.acima)}</b></div>`;
+  $('#v-ban').textContent = n(P.bancos);
+  $('#v-vid').textContent = n(P.vidaBateria[1]) + ' meses'; $('#v-int').textContent = n(P.intervaloGas[1]) + ' meses';
+  for (const [id, v] of [['#s-ban', P.bancos], ['#s-vid', P.vidaBateria[1]], ['#s-int', P.intervaloGas[1]]]) { $(id).value = v; pinta($(id)); }
+  $('#g-dois').textContent = pc(d.acima); $('#g-dois').classList.toggle('ruim', d.acima > .5);
+  $('#s-dois').textContent = `dos cenários acima de ${pg} trocas; média de ${n(d.media, 1)}`;
+  $('#rot-atual').textContent = `Baterias, ${n(P.bancos)} bancos (inventário)`;
+  $('#g-atual').textContent = pc(b.acima); $('#g-atual').classList.toggle('ruim', b.acima > .5);
+  $('#s-atual').textContent = `dos cenários acima de ${pg} trocas; média de ${n(b.media, 1)}`;
+  const esc = Math.max(pg * 2, Math.ceil(Math.max(d.media, b.media)) + 1);
+  const qm = quieto('med', '#b2');
+  $('#m-dois').innerHTML = medidor(d.media, esc, pg); $('#m-atual').innerHTML = medidor(b.media, esc, pg);
+  if (qm) document.querySelectorAll('.trilho-m span').forEach(e => e.classList.remove('anim-barra'));
+
+  const trocas = tempo();
+  $('#k3').innerHTML = `${n(trocas)}<span class="un">trocas</span>`;
+  $('#fa3').innerHTML = `<div><span>Bancos de baterias</span><b>${n(P.bancos)}</b></div><div><span>Vida provável</span><b class="y">${n(P.vidaBateria[1])} meses</b></div><div><span>Horizonte</span><b class="x">${n(P.meses)} meses</b></div>`;
+  $('#f3').innerHTML = `Troca decidida por ensaio, com linha de base medida na entrada. Com vida provável de ${n(P.vidaBateria[1])} meses e ${n(P.bancos)} bancos, o calendário prevê <b>${n(trocas)} trocas em ${P.meses} meses</b>; a data de cada troca é definida por ensaio.`;
+}
+
+function simula() {
+  const S = sobDemanda(P), S2 = P.bancos === 2 ? S : sobDemanda({ ...P, bancos: 2 });
+  desenha(S, S2);
+}
+
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if (t.type === 'range') pinta(t);
+  if (t.id === 's-ban') $('#v-ban').textContent = n(+t.value);
+  if (t.id === 's-vid') $('#v-vid').textContent = n(+t.value) + ' meses';
+  if (t.id === 's-int') $('#v-int').textContent = n(+t.value) + ' meses';
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.id === 's-ban') P.bancos = +t.value;
+  else if (t.id === 's-vid') P.vidaBateria = faixa(+t.value);
+  else if (t.id === 's-int') P.intervaloGas = faixa(+t.value);
+  else return;
+  simula();
+  const foco = document.getElementById(t.id); if (foco) foco.focus();
+});
+document.addEventListener('click', ev => { if (ev.target.id === 'restaura') { P = structuredClone(PADRAO); simula(); } });
+
+// Mostra os blocos ao entrar na tela, para a entrada animada rodar uma vez.
+const blocos = document.querySelectorAll('.bloco');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } }), { threshold: .12 });
+  blocos.forEach(b => io.observe(b));
+} else blocos.forEach(b => b.classList.add('vis'));
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (ult) { hist('#h-bat', ult[0].baterias, ult[0].pagas); hist('#h-gas', ult[0].gas, ult[0].pagas); tempo(); } }, 150); });
+
+// A simulação roda depois do primeiro desenho da página.
+requestAnimationFrame(() => setTimeout(simula, 0));
+</script>
+</body>
+</html>
