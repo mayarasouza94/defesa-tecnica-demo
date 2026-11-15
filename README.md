@@ -1,5 +1,7 @@
 # Defesa técnica: manutenção de duas salas-cofre
 
+**English.** Interactive technical proposal for a data center. A technical proposal method applied to a public tender, anonymized: the client's documents become workload, crew, response time and risk, with every assumption stated and adjustable. [Open the live page](https://mayarasouza94.github.io/defesa-tecnica-demo/).
+
 Demonstração de método de defesa técnica, de Mayara Souza. A peça parte dos documentos de um edital público de
 manutenção de data center e devolve ao cliente o dimensionamento da equipe, com a conta aberta e as premissas
 ajustáveis.
